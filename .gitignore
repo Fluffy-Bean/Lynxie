@@ -1,0 +1,7 @@
+# Ignore Editor files
+.idea/
+.vscode/
+
+# Ignore build and environment files
+/target/
+**.env
