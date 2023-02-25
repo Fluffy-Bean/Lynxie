@@ -1,2 +1,4 @@
 # Lynxie
-Lynxie is a discord bot written in Rust
+Lynxie the worst Discord bot out there
+
+![Lynxie bot icon](Lynxie.png)
