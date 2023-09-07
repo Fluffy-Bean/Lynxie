@@ -5,18 +5,20 @@ from discord.ext import commands
 
 
 youtube_dl.utils.bug_reports_message = lambda: ""
-ytdl = youtube_dl.YoutubeDL({
-    "format": "bestaudio/best",
-    "outtmpl": "%(extractor)s-%(id)s-%(title)s.%(ext)s",
-    "restrictfilenames": True,
-    "noplaylist": True,
-    "nocheckcertificate": True,
-    "ignoreerrors": False,
-    "logtostderr": False,
-    "quiet": True,
-    "no_warnings": True,
-    "default_search": "auto",
-})
+ytdl = youtube_dl.YoutubeDL(
+    {
+        "format": "bestaudio/best",
+        "outtmpl": "%(extractor)s-%(id)s-%(title)s.%(ext)s",
+        "restrictfilenames": True,
+        "noplaylist": True,
+        "nocheckcertificate": True,
+        "ignoreerrors": False,
+        "logtostderr": False,
+        "quiet": True,
+        "no_warnings": True,
+        "default_search": "auto",
+    }
+)
 
 
 class YTDLSource(discord.PCMVolumeTransformer):
@@ -40,7 +42,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
             data = data["entries"][0]
 
         filename = data["url"] if stream else ytdl.prepare_filename(data)
-        return cls(discord.FFmpegPCMAudio(filename, options='-vn'), data=data)
+        return cls(discord.FFmpegPCMAudio(filename, options="-vn"), data=data)
 
 
 class Music(commands.Cog):

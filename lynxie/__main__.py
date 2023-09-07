@@ -20,7 +20,7 @@ async def on_ready():
 @lynxie.event
 async def on_message_edit(before, after):
     await before.channel.send(
-        f'@{before.author} edited their message!!!\n'
+        f"@{before.author} edited their message!!!\n"
         f'Before: "{before.content}"\n'
         f'After: "{after.content}"'
     )
