@@ -18,8 +18,8 @@ class Help(commands.Cog):
     @commands.command()
     async def help(self, ctx):
         embed = discord.Embed(
-            title='Help',
-            description='Lynxie\'s prefix is `AAAA `',
+            title="Help",
+            description="Lynxie's prefix is `AAAA `",
             colour=discord.Colour.orange(),
         )
 
