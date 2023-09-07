@@ -1,7 +1,9 @@
-# Ignore Editor files
-.idea/
-.vscode/
+# IDEA
+/shelf/
+/workspace.xml
+/httpRequests/
+/dataSources/
+/dataSources.local.xml
+.idea
 
-# Ignore build and environment files
-/target/
-**.env
+.env
