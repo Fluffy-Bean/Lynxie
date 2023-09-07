@@ -1,4 +1,3 @@
-import discord
 from discord.ext import commands
 
 
@@ -7,6 +6,5 @@ class Hello(commands.Cog):
         self.bot = bot
 
     @commands.command()
-    async def hello(self, interaction: discord.Interaction):
-        """Says hello!"""
-        await interaction.response.send_message(f"Balls, {interaction.user.mention}")
+    async def hello(self, ctx):
+        await ctx.send(f"Hello {ctx.author.mention}!")

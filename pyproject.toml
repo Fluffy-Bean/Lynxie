@@ -3,7 +3,7 @@ name = "lynxie"
 version = "0.1.0"
 description = ""
 authors = ["Fluffy <michal-gdula@protonmail.com>"]
-readme = "README.md"
+readme = ".github/README.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -11,6 +11,8 @@ discord = "^2.3.2"
 black = "^23.7.0"
 sqlalchemy = "^2.0.20"
 python-dotenv = "^1.0.0"
+discord-py = {extras = ["voice"], version = "^2.3.2"}
+youtube-dl = {git = "https://github.com/ytdl-org/ytdl-nightly.git"}
 
 
 [build-system]
