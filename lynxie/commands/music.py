@@ -16,7 +16,6 @@ ytdl = youtube_dl.YoutubeDL({
     "quiet": True,
     "no_warnings": True,
     "default_search": "auto",
-    "source_address": "0.0.0.0",
 })
 
 
@@ -49,7 +48,7 @@ class Music(commands.Cog):
         self.bot = bot
 
     @commands.command()
-    async def move(self, ctx, *, channel: discord.VoiceChannel):
+    async def join(self, ctx, *, channel: discord.VoiceChannel):
         """Joins a voice channel"""
 
         if ctx.voice_client is not None:

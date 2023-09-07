@@ -7,4 +7,4 @@ class Hello(commands.Cog):
 
     @commands.command()
     async def hello(self, ctx):
-        await ctx.send(f"Hello {ctx.author.mention}!")
+        await ctx.send(f"Hello from England, {ctx.author.mention}!")
