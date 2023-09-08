@@ -2,13 +2,16 @@ import asyncio
 
 import discord
 from discord.ext import commands
+from discord.gateway import DiscordWebSocket
 
 from lynxie.config import DISCORD_TOKEN, LYNXIE_PREFIX
 from lynxie.commands import Help, Ping, Hello, Music, Animals, Img
 from lynxie.database import CommandHistory, Database
+from lynxie.utils import mobile_status
 
 
 db = Database()
+DiscordWebSocket.identify = mobile_status
 lynxie = commands.Bot(
     intents=discord.Intents.all(),
     command_prefix=LYNXIE_PREFIX,
@@ -50,10 +53,10 @@ async def on_message_edit(before, after):
     ):
         return
 
-    await before.channel.send(
-        f"@{before.author} edited their message!!!\n"
-        f'"{before.content}" --> "{after.content}"'
-    )
+    # await before.channel.send(
+    #     f"@{before.author} edited their message!!!\n"
+    #     f'"{before.content}" --> "{after.content}"'
+    # )
 
 
 async def run():

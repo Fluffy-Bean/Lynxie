@@ -1,7 +1,7 @@
 import os
+import datetime
 import requests
 from io import BytesIO
-import datetime
 
 from PIL import Image
 
@@ -16,17 +16,30 @@ class Img(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self._overlays = {
-            "bubble": Image.open(os.path.join(ASSETS_PATH, "bubble.png")).convert(
-                "RGBA"
-            ),
-            "gang": Image.open(os.path.join(ASSETS_PATH, "gang.png")).convert("RGBA"),
+            "bubble": Image.open(os.path.join(ASSETS_PATH, "bubble.png")),
+            "gang": Image.open(os.path.join(ASSETS_PATH, "gang.png")),
         }
 
     @commands.command()
     async def overlay(self, ctx, style: str = None):
         start_time = datetime.datetime.now()
-
         style = style.lower().strip() if style else None
+        image_attachments = None
+
+        if ctx.message.attachments:
+            image_attachments = ctx.message.attachments[0]
+        elif ctx.message.reference and ctx.message.reference.resolved.attachments:
+            image_attachments = ctx.message.reference.resolved.attachments[0]
+        elif ctx.message.embeds and ctx.message.embeds[0].image:
+            image_attachments = ctx.message.embeds[0].image
+        else:
+            async for message in ctx.guild.get_channel(ctx.channel.id).history(limit=10):
+                if message.attachments:
+                    image_attachments = message.attachments[0]
+                    break
+                elif message.embeds and message.embeds[0].image:
+                    image_attachments = message.embeds[0].image
+                    break
 
         # Check if image should be processed
         async with ctx.typing():
@@ -38,14 +51,26 @@ class Img(commands.Cog):
                 await ctx.reply(embed=error_message(error))
                 return
 
-            if not ctx.message.attachments:
+            if not image_attachments:
                 error = "You need to attach an image to use this command!"
                 await ctx.reply(embed=error_message(error))
                 return
 
-            # Extracts file extension from filename
+            # Extracts file extension from filename or url
             if (
-                not ctx.message.attachments[0].filename.split(".")[-1].lower()
+                image_attachments.filename
+                and not image_attachments.filename.split(".")[-1].lower()
+                in IMAGE_EXTENSIONS
+            ):
+                error = (
+                    "Unsupported file type! Supported file types are:\n"
+                    f"`{', '.join(IMAGE_EXTENSIONS)}`"
+                )
+                await ctx.reply(embed=error_message(error))
+                return
+            elif (
+                image_attachments.url
+                and not image_attachments.url.split(".")[-1].lower()
                 in IMAGE_EXTENSIONS
             ):
                 error = (
@@ -55,7 +80,10 @@ class Img(commands.Cog):
                 await ctx.reply(embed=error_message(error))
                 return
 
-            if ctx.message.attachments[0].size > 8_000_000:
+            if (
+                image_attachments.size
+                and image_attachments.size > 8 * 1024 * 1024
+            ):
                 error = (
                     "That image is too big! Please use an image that is less than 8MB."
                 )
@@ -63,16 +91,14 @@ class Img(commands.Cog):
                 return
 
             if (
-                not 0 < ctx.message.attachments[0].width <= 3500
-                or not 0 < ctx.message.attachments[0].height <= 3500
+                not 0 < image_attachments.width <= 3500
+                or not 0 < image_attachments.height <= 3500
             ):
                 error = "Image must be at least 1x1 and under 3500x3500!"
                 await ctx.reply(embed=error_message(error))
                 return
 
-        # Process image
-        async with ctx.typing():
-            response = requests.get(ctx.message.attachments[0].url)
+            response = requests.get(image_attachments.url)
             message_attachment = Image.open(BytesIO(response.content))
 
             if message_attachment.width < message_attachment.height:
