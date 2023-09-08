@@ -4,8 +4,8 @@ from discord.ext import commands
 from lynxie.utils import error_message
 
 
-ffmpeg_options = {'options': '-vn'}
-ydl_opts = {'format': 'bestaudio'}
+ffmpeg_options = {"options": "-vn"}
+ydl_opts = {"format": "bestaudio"}
 ytdl = yt_dlp.YoutubeDL(ydl_opts)
 
 
@@ -25,13 +25,15 @@ class Music(commands.Cog):
             try:
                 song_info = ytdl.extract_info(url, download=False)
                 print(song_info["url"])
-                ctx.voice_client.play(discord.FFmpegPCMAudio(song_info["url"], **ffmpeg_options))
+                ctx.voice_client.play(
+                    discord.FFmpegPCMAudio(song_info["url"], **ffmpeg_options)
+                )
             except Exception:
                 await ctx.reply(
                     embed=error_message(
                         "An error occurred while processing this request."
                     ),
-                    mention_author=False
+                    mention_author=False,
                 )
                 return
 
@@ -49,7 +51,7 @@ class Music(commands.Cog):
             else:
                 await ctx.reply(
                     embed=error_message("You are not connected to a voice channel!"),
-                    mention_author=False
+                    mention_author=False,
                 )
         elif ctx.voice_client.is_playing():
             ctx.voice_client.stop()
