@@ -1,46 +1,12 @@
-import asyncio
-import youtube_dl
+import yt_dlp
 import discord
 from discord.ext import commands
+from lynxie.utils import error_message
 
 
-youtube_dl.utils.bug_reports_message = lambda: ""
-ytdl = youtube_dl.YoutubeDL({
-    "format": "bestaudio/best",
-    "outtmpl": "%(extractor)s-%(id)s-%(title)s.%(ext)s",
-    "restrictfilenames": True,
-    "noplaylist": True,
-    "nocheckcertificate": True,
-    "ignoreerrors": False,
-    "logtostderr": False,
-    "quiet": True,
-    "no_warnings": True,
-    "default_search": "auto",
-})
-
-
-class YTDLSource(discord.PCMVolumeTransformer):
-    def __init__(self, source, *, data, volume=0.5):
-        super().__init__(source, volume)
-
-        self.data = data
-
-        self.title = data.get("title")
-        self.url = data.get("url")
-
-    @classmethod
-    async def from_url(cls, url, *, loop=None, stream=False):
-        loop = loop or asyncio.get_event_loop()
-        data = await loop.run_in_executor(
-            None, lambda: ytdl.extract_info(url, download=not stream)
-        )
-
-        if "entries" in data:
-            # take first item from a playlist
-            data = data["entries"][0]
-
-        filename = data["url"] if stream else ytdl.prepare_filename(data)
-        return cls(discord.FFmpegPCMAudio(filename, options='-vn'), data=data)
+ffmpeg_options = {'options': '-vn'}
+ydl_opts = {'format': 'bestaudio'}
+ytdl = yt_dlp.YoutubeDL(ydl_opts)
 
 
 class Music(commands.Cog):
@@ -49,33 +15,30 @@ class Music(commands.Cog):
 
     @commands.command()
     async def join(self, ctx, *, channel: discord.VoiceChannel):
-        """Joins a voice channel"""
-
         if ctx.voice_client is not None:
             return await ctx.voice_client.move_to(channel)
-
         await channel.connect()
 
     @commands.command()
     async def play(self, ctx, *, url):
-        """Streams from a url (same as yt, but doesn't predownload)"""
-
         async with ctx.typing():
             try:
-                player = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
-                ctx.voice_client.play(
-                    player, after=lambda e: print(f"Player error: {e}") if e else None
-                )
+                song_info = ytdl.extract_info(url, download=False)
+                print(song_info["url"])
+                ctx.voice_client.play(discord.FFmpegPCMAudio(song_info["url"], **ffmpeg_options))
             except Exception:
-                await ctx.send("Sorry, I can't play that video.")
+                await ctx.reply(
+                    embed=error_message(
+                        "An error occurred while processing this request."
+                    ),
+                    mention_author=False
+                )
                 return
 
-        await ctx.send(f"Now playing: {player.title}")
+        await ctx.send(f"Now playing: {song_info['title']}")
 
     @commands.command()
     async def stop(self, ctx):
-        """Stops and disconnects the bot from voice"""
-
         await ctx.voice_client.disconnect()
 
     @play.before_invoke
@@ -84,7 +47,9 @@ class Music(commands.Cog):
             if ctx.author.voice:
                 await ctx.author.voice.channel.connect()
             else:
-                await ctx.send("You are not connected to a voice channel.")
-                raise commands.CommandError("Author not connected to a voice channel.")
+                await ctx.reply(
+                    embed=error_message("You are not connected to a voice channel!"),
+                    mention_author=False
+                )
         elif ctx.voice_client.is_playing():
             ctx.voice_client.stop()

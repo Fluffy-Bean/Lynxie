@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from lynxie.config import LYNXIE_PREFIX
 
 
 class Help(commands.Cog):
@@ -19,7 +20,7 @@ class Help(commands.Cog):
     async def help(self, ctx):
         embed = discord.Embed(
             title="Help",
-            description="Lynxie's prefix is `AAAA `",
+            description=f"Lynxie's prefix is `{LYNXIE_PREFIX}`",
             colour=discord.Colour.orange(),
         )
 
@@ -30,4 +31,4 @@ class Help(commands.Cog):
                 inline=False,
             )
 
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed)
