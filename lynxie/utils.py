@@ -63,7 +63,7 @@ def get_env_or_error(env: str) -> str:
 
     if from_file is None and from_env is None:
         raise KeyError(f"Environment variable {env} not found")
-    elif from_file is None:
+    if from_file is None:
         return from_env
     else:
         return from_file
