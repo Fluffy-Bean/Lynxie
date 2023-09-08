@@ -7,8 +7,8 @@ def error_message(error: str) -> discord.Embed:
     print("Error: " + error)
 
     embed = discord.Embed(
-        title="Error",
-        description=f"`{error}`",
+        title="Error :(",
+        description=error,
         colour=discord.Colour.red(),
     )
     embed.set_footer(text="For more information, use the help command.")

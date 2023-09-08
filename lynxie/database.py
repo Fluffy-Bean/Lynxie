@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine, Column, Integer, String, DateTime
 from sqlalchemy.orm import declarative_base, sessionmaker
-from lynxie.config import LYNXIE_DB
+from lynxie.config import DATABASE_URI
 
 
 Base = declarative_base()
@@ -19,7 +19,7 @@ class CommandHistory(Base):
 
 class Database:
     def __init__(self):
-        self.engine = create_engine(LYNXIE_DB)
+        self.engine = create_engine(DATABASE_URI)
         self.session = sessionmaker(bind=self.engine)
         self.session = self.session()
 

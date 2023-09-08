@@ -15,7 +15,6 @@ class Animals(commands.Cog):
     @commands.command()
     async def animal(self, ctx, animal):
         animal = animal.lower().strip() or "racc"
-        animal_filename = f"{animal}.png"
 
         if animal not in TINYFOX_ANIMALS:
             await ctx.reply(
@@ -27,17 +26,16 @@ class Animals(commands.Cog):
             return
 
         async with ctx.typing():
-            animal_image_request = requests.get(
-                f"https://api.tinyfox.dev/img?animal={animal}"
-            ).content
-            animal_image = BytesIO(animal_image_request)
+            request = requests.get(f"https://api.tinyfox.dev/img?animal={animal}&json")
+            animal_image = BytesIO(request.content)
             animal_image.seek(0)
-            animal_file = discord.File(animal_image, filename=animal_filename)
+            animal_file = discord.File(animal_image, filename="image.png")
 
             embed = discord.Embed(
-                title="Animal",
-                description=f"Here's a random {animal}!",
+                title=animal.capitalize(),
                 colour=discord.Colour.orange(),
-            ).set_image(url="attachment://" + animal_filename)
+            ).set_image(
+                url="attachment://image.png"
+            )
 
             await ctx.reply(embed=embed, file=animal_file, mention_author=False)

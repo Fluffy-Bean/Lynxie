@@ -2,14 +2,18 @@ import os
 from discord import Object
 from lynxie.utils import get_env_or_error
 
-DATA_PATH = "data"
-
-LYNXIE_PREFIX = "~"
-LYNXIE_DB = f"sqlite:///" + os.path.join(DATA_PATH, "lynxie.db")
-
-DISCORD_GUILD_ID = Object(id=1040757387033849976)
 DISCORD_TOKEN = get_env_or_error("DISCORD_TOKEN")
+DISCORD_GUILD_ID = Object(id=1040757387033849976)
+LYNXIE_PREFIX = "~"
 
+DATA_PATH = "data"
+ASSETS_PATH = "assets"
+
+DATABASE_URI = f"sqlite:///" + os.path.join(DATA_PATH, "lynxie.db")
+
+# https://tinyfox.dev/docs/
+# TODO: Get list from API instead of hardcoding
+# https://api.tinyfox.dev/img?animal=animal&json
 TINYFOX_ANIMALS = [
     "chi",
     "bear",
@@ -41,4 +45,13 @@ TINYFOX_ANIMALS = [
     "snep",
     "tig",
     "woof",
+]
+
+IMAGE_EXTENSIONS = [
+    "png", "jpg", "jpeg", "webp"
+]
+
+IMAGE_OVERLAYS = [
+    "bubble",
+    "gang",
 ]

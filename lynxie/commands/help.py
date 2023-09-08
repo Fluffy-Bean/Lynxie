@@ -13,7 +13,8 @@ class Help(commands.Cog):
             "join": "Join the voice channel you're in",
             "play <url>": "Play a song from YouTube, SoundCloud, etc.",
             "stop": "Stop the current song and leave the voice channel",
-            "e621": "Search e621.net",
+            "animal <animal>": "Get a random image of an animal!",
+            "overlay <style>": "Overlay an image with a style, e.g. `bubble`",
         }
 
     @commands.command()

@@ -3,6 +3,7 @@ from .ping import Ping
 from .hello import Hello
 from .music import Music
 from .animals import Animals
+from .image import Img
 
 __all__ = [
     "Help",
@@ -10,4 +11,5 @@ __all__ = [
     "Hello",
     "Music",
     "Animals",
+    "Img",
 ]
