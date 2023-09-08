@@ -33,7 +33,9 @@ class Img(commands.Cog):
         elif ctx.message.embeds and ctx.message.embeds[0].image:
             image_attachments = ctx.message.embeds[0].image
         else:
-            async for message in ctx.guild.get_channel(ctx.channel.id).history(limit=10):
+            async for message in ctx.guild.get_channel(ctx.channel.id).history(
+                limit=10
+            ):
                 if message.attachments:
                     image_attachments = message.attachments[0]
                     break
@@ -70,8 +72,7 @@ class Img(commands.Cog):
                 return
             elif (
                 image_attachments.url
-                and not image_attachments.url.split(".")[-1].lower()
-                in IMAGE_EXTENSIONS
+                and not image_attachments.url.split(".")[-1].lower() in IMAGE_EXTENSIONS
             ):
                 error = (
                     "Unsupported file type! Supported file types are:\n"
@@ -80,10 +81,7 @@ class Img(commands.Cog):
                 await ctx.reply(embed=error_message(error))
                 return
 
-            if (
-                image_attachments.size
-                and image_attachments.size > 8 * 1024 * 1024
-            ):
+            if image_attachments.size and image_attachments.size > 8 * 1024 * 1024:
                 error = (
                     "That image is too big! Please use an image that is less than 8MB."
                 )
