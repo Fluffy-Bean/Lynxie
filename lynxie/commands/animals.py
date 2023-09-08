@@ -34,8 +34,6 @@ class Animals(commands.Cog):
             embed = discord.Embed(
                 title=animal.capitalize(),
                 colour=discord.Colour.orange(),
-            ).set_image(
-                url="attachment://image.png"
-            )
+            ).set_image(url="attachment://image.png")
 
             await ctx.reply(embed=embed, file=animal_file, mention_author=False)

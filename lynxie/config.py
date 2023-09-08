@@ -47,9 +47,7 @@ TINYFOX_ANIMALS = [
     "woof",
 ]
 
-IMAGE_EXTENSIONS = [
-    "png", "jpg", "jpeg", "webp"
-]
+IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp"]
 
 IMAGE_OVERLAYS = [
     "bubble",
