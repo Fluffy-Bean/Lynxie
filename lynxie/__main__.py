@@ -27,10 +27,7 @@ async def on_ready():
 
 @lynxie.event
 async def on_command(ctx):
-    if (
-        ctx.author == lynxie.user or
-        ctx.author.bot
-    ):
+    if ctx.author == lynxie.user or ctx.author.bot:
         return
 
     query = CommandHistory(
@@ -45,18 +42,17 @@ async def on_command(ctx):
     db.session.commit()
 
 
-
 @lynxie.event
 async def on_message_edit(before, after):
     if (
-        before.author == lynxie.user or
-        before.author.bot or
-        before.content == after.content
+        before.author == lynxie.user
+        or before.author.bot
+        or before.content == after.content
     ):
         return
 
     await before.channel.send(
-        f'@{before.author} edited their message!!!\n'
+        f"@{before.author} edited their message!!!\n"
         f'"{before.content}" --> "{after.content}"'
     )
 
