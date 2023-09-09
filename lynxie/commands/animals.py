@@ -27,7 +27,9 @@ class Animals(commands.Cog):
             return
 
         async with ctx.typing():
-            request = requests.get("https://api.tinyfox.dev/img?animal=" + animal_choice)
+            request = requests.get(
+                "https://api.tinyfox.dev/img?animal=" + animal_choice
+            )
 
             with BytesIO(request.content) as response:
                 response.seek(0)
