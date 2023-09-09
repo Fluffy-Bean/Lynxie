@@ -53,11 +53,6 @@ async def on_message_edit(before, after):
     ):
         return
 
-    # await before.channel.send(
-    #     f"@{before.author} edited their message!!!\n"
-    #     f'"{before.content}" --> "{after.content}"'
-    # )
-
 
 async def run():
     async with lynxie:

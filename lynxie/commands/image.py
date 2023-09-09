@@ -86,7 +86,7 @@ class Img(commands.Cog):
 
         width, height = image_attachments.width, image_attachments.height
         if not 10 < width <= 4500 or not 10 < height <= 4500:
-            error = "Image must be at least 10x10 and under 4500x4500!"
+            error = "Image must be at least over 10x10 and under 4500x4500!"
             await ctx.reply(embed=error_message(error))
             return
 

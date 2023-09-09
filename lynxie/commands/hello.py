@@ -1,3 +1,4 @@
+import discord
 from discord.ext import commands
 
 
@@ -7,4 +8,10 @@ class Hello(commands.Cog):
 
     @commands.command()
     async def hello(self, ctx):
-        await ctx.send(f"Hello from England, {ctx.author.mention}!")
+        embed = discord.Embed(
+            title="Hello!",
+            description="I'm Lynxie, a multipurpose Discord bot written in Python!",
+            color=discord.Color.orange(),
+        )
+
+        await ctx.reply(embed=embed)

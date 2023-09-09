@@ -1,3 +1,4 @@
+import discord
 from discord.ext import commands
 
 
@@ -7,4 +8,9 @@ class Ping(commands.Cog):
 
     @commands.command()
     async def ping(self, ctx):
-        await ctx.send(f"Pong! {round(self.bot.latency * 1000)}ms")
+        embed = discord.Embed(
+            title="Pong!",
+            description=f"{round(self.bot.latency * 1000)}ms",
+            color=discord.Color.orange(),
+        )
+        await ctx.reply(embed=embed, mention_author=False)

@@ -1,13 +1,13 @@
 import os
+import dotenv
 from discord import Object
-from lynxie.utils import get_env_or_error
 
-DISCORD_TOKEN = get_env_or_error("DISCORD_TOKEN")
+DISCORD_TOKEN = dotenv.dotenv_values(".env").get("DISCORD_TOKEN") or os.environ.get("DISCORD_TOKEN") or None
 DISCORD_GUILD_ID = Object(id=1040757387033849976)
 LYNXIE_PREFIX = "?"
 
-DATA_PATH = "data"
-ASSETS_PATH = "assets"
+DATA_PATH = os.path.join("lynxie", "data")
+ASSETS_PATH = os.path.join("lynxie", "assets")
 
 DATABASE_URI = f"sqlite:///" + os.path.join(DATA_PATH, "lynxie.db")
 

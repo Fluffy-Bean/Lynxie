@@ -24,20 +24,24 @@ class Music(commands.Cog):
         async with ctx.typing():
             try:
                 song_info = ytdl.extract_info(url, download=False)
-                print(song_info["url"])
                 ctx.voice_client.play(
                     discord.FFmpegPCMAudio(song_info["url"], **ffmpeg_options)
                 )
-            except Exception:
+            except Exception as err:
+                error = "An error occurred while processing this request." + str(err)
                 await ctx.reply(
-                    embed=error_message(
-                        "An error occurred while processing this request."
-                    ),
+                    embed=error_message(error),
                     mention_author=False,
                 )
                 return
 
-        await ctx.send(f"Now playing: {song_info['title']}")
+        embed = discord.Embed(
+            title="Now playing",
+            description=f"[{song_info['title']}]({song_info['webpage_url']})",
+            color=discord.Color.orange(),
+        )
+
+        await ctx.reply(embed=embed, mention_author=False)
 
     @commands.command()
     async def stop(self, ctx):
@@ -49,9 +53,11 @@ class Music(commands.Cog):
             if ctx.author.voice:
                 await ctx.author.voice.channel.connect()
             else:
+                error = "You are not connected to a voice channel."
                 await ctx.reply(
-                    embed=error_message("You are not connected to a voice channel!"),
+                    embed=error_message(error),
                     mention_author=False,
                 )
+                return
         elif ctx.voice_client.is_playing():
             ctx.voice_client.stop()

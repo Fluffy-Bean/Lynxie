@@ -1,9 +1,7 @@
-import os
 import sys
-import dotenv
-
 import discord
 from discord.gateway import _log
+from lynxie.config import LYNXIE_PREFIX
 
 
 async def mobile_status(self):
@@ -53,19 +51,9 @@ def error_message(error: str) -> discord.Embed:
         title="Error :(",
         description=error,
         colour=discord.Colour.red(),
+    ).set_footer(
+        text=f"For more information, use the "
+             f"{LYNXIE_PREFIX}help command."
     )
-    embed.set_footer(text="For more information, use the help command.")
 
     return embed
-
-
-def get_env_or_error(env: str) -> str:
-    from_file = dotenv.dotenv_values(".env").get(env)
-    from_env = os.environ.get(env)
-
-    if from_file is None and from_env is None:
-        raise KeyError(f"Environment variable {env} not found")
-    if from_file is None:
-        return from_env
-    else:
-        return from_file
