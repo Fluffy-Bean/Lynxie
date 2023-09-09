@@ -13,27 +13,29 @@ class Animals(commands.Cog):
         self.bot = bot
 
     @commands.command()
-    async def animal(self, ctx, animal):
-        animal = animal.lower().strip() or "racc"
+    async def animal(self, ctx, animal_choice: str = ""):
+        animal_choice = animal_choice.lower().strip() or None
 
-        if animal not in TINYFOX_ANIMALS:
-            await ctx.reply(
-                embed=error_message(
-                    f"That animal doesn't exist! Try one of these:\n"
-                    f"`{', '.join(TINYFOX_ANIMALS)}`"
-                )
-            )
+        if not animal_choice:
+            error = f"You need to specify an animal! Try one of these: {', '.join(TINYFOX_ANIMALS)}"
+            await ctx.reply(embed=error_message(error))
+            return
+
+        if animal_choice not in TINYFOX_ANIMALS:
+            error = f"That animal doesn't exist! Try one of these: {', '.join(TINYFOX_ANIMALS)}"
+            await ctx.reply(embed=error_message(error))
             return
 
         async with ctx.typing():
-            request = requests.get(f"https://api.tinyfox.dev/img?animal={animal}&json")
-            animal_image = BytesIO(request.content)
-            animal_image.seek(0)
-            animal_file = discord.File(animal_image, filename="image.png")
+            request = requests.get("https://api.tinyfox.dev/img?animal=" + animal_choice)
 
-            embed = discord.Embed(
-                title=animal.capitalize(),
-                colour=discord.Colour.orange(),
-            ).set_image(url="attachment://image.png")
+            with BytesIO(request.content) as response:
+                response.seek(0)
+                animal_file = discord.File(response, filename="image.png")
 
-            await ctx.reply(embed=embed, file=animal_file, mention_author=False)
+                embed = discord.Embed(
+                    title=animal_choice.capitalize(),
+                    colour=discord.Colour.orange(),
+                ).set_image(url="attachment://image.png")
+
+                await ctx.reply(embed=embed, file=animal_file, mention_author=False)

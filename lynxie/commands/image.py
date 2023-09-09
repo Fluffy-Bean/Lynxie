@@ -1,31 +1,28 @@
-import os
 import datetime
 import requests
 from io import BytesIO
 
-from PIL import Image
+from PIL import Image, ImageEnhance
 
 import discord
 from discord.ext import commands
 
-from lynxie.config import IMAGE_EXTENSIONS, IMAGE_OVERLAYS, ASSETS_PATH
+from lynxie.config import IMAGE_EXTENSIONS, IMAGE_OVERLAYS
 from lynxie.utils import error_message
 
 
 class Img(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self._overlays = {
-            "bubble": Image.open(os.path.join(ASSETS_PATH, "bubble.png")),
-            "gang": Image.open(os.path.join(ASSETS_PATH, "gang.png")),
-        }
 
     @commands.command()
-    async def overlay(self, ctx, style: str = None):
+    async def overlay(self, ctx, overlay_choice: str = None, overlay_style: str = "default"):
         start_time = datetime.datetime.now()
-        style = style.lower().strip() if style else None
-        image_attachments = None
 
+        overlay_choice = overlay_choice.lower().strip() if overlay_choice else None
+        overlay_style = overlay_style.lower().strip() if overlay_style else "default"
+
+        image_attachments = None
         if ctx.message.attachments:
             image_attachments = ctx.message.attachments[0]
         elif ctx.message.reference and ctx.message.reference.resolved.attachments:
@@ -33,19 +30,22 @@ class Img(commands.Cog):
         elif ctx.message.embeds and ctx.message.embeds[0].image:
             image_attachments = ctx.message.embeds[0].image
         else:
-            async for message in ctx.guild.get_channel(ctx.channel.id).history(
-                limit=10
-            ):
+            channel = ctx.guild.get_channel(ctx.channel.id)
+            async for message in channel.history(limit=10):
                 if message.attachments:
                     image_attachments = message.attachments[0]
                     break
-                elif message.embeds and message.embeds[0].image:
+                if message.embeds and message.embeds[0].image:
                     image_attachments = message.embeds[0].image
                     break
 
-        # Check if image should be processed
         async with ctx.typing():
-            if not style or style not in IMAGE_OVERLAYS:
+            if not image_attachments:
+                error = "No image was found!"
+                await ctx.reply(embed=error_message(error))
+                return
+
+            if not overlay_choice or overlay_choice not in IMAGE_OVERLAYS:
                 error = (
                     "That is not a valid option! Valid options are:\n"
                     f"`{', '.join(IMAGE_OVERLAYS)}`"
@@ -53,94 +53,105 @@ class Img(commands.Cog):
                 await ctx.reply(embed=error_message(error))
                 return
 
-            if not image_attachments:
-                error = "You need to attach an image to use this command!"
-                await ctx.reply(embed=error_message(error))
-                return
-
-            # Extracts file extension from filename or url
-            if (
-                image_attachments.filename
-                and not image_attachments.filename.split(".")[-1].lower()
-                in IMAGE_EXTENSIONS
-            ):
+            if overlay_style not in IMAGE_OVERLAYS[overlay_choice]["options"]:
                 error = (
-                    "Unsupported file type! Supported file types are:\n"
-                    f"`{', '.join(IMAGE_EXTENSIONS)}`"
+                    "That is not a valid option! Valid options are:\n"
+                    f"`{', '.join(IMAGE_OVERLAYS[overlay_choice]['options'])}`"
                 )
                 await ctx.reply(embed=error_message(error))
                 return
-            elif (
-                image_attachments.url
-                and not image_attachments.url.split(".")[-1].lower() in IMAGE_EXTENSIONS
-            ):
+
+            # Defaults to gwa as I cant be asked to make a better error handler
+            filename = image_attachments.filename or image_attachments.url or "image.gwa"
+            if not filename.split(".")[-1].lower() in IMAGE_EXTENSIONS:
                 error = (
-                    "Unsupported file type! Supported file types are:\n"
-                    f"`{', '.join(IMAGE_EXTENSIONS)}`"
+                    "Unsupported file type! Supported file types are "
+                    ", ".join(IMAGE_EXTENSIONS)
                 )
                 await ctx.reply(embed=error_message(error))
                 return
 
             if image_attachments.size and image_attachments.size > 8 * 1024 * 1024:
                 error = (
-                    "That image is too big! Please use an image that is less than 8MB."
+                    "That image is too big! "
+                    "Please use an image that is less than 8MB."
                 )
                 await ctx.reply(embed=error_message(error))
                 return
 
             if (
-                not 0 < image_attachments.width <= 3500
-                or not 0 < image_attachments.height <= 3500
+                not 10 < image_attachments.width <= 3500
+                or not 10 < image_attachments.height <= 3500
             ):
-                error = "Image must be at least 1x1 and under 3500x3500!"
+                error = "Image must be at least 10x10 and under 3500x3500!"
                 await ctx.reply(embed=error_message(error))
                 return
 
-            response = requests.get(image_attachments.url)
-            message_attachment = Image.open(BytesIO(response.content))
+            request = requests.get(image_attachments.url)
+            attachment = Image.open(BytesIO(request.content))
+            width, height = attachment.width, attachment.height
 
-            if message_attachment.width < message_attachment.height:
-                message_attachment.thumbnail((200, message_attachment.height))
+            if width < height:
+                attachment.thumbnail((200, height))
             else:
-                message_attachment.thumbnail((message_attachment.width, 200))
+                attachment.thumbnail((width, 200))
 
-            if style == "bubble":
-                # The bubble is resized twice as for some reason .copy() doesn't work
-                message_attachment.paste(
-                    self._overlays["bubble"].resize(
-                        (message_attachment.width, self._overlays["bubble"].height)
-                    ),
-                    (0, 0),
-                    self._overlays["bubble"].resize(
-                        (message_attachment.width, self._overlays["bubble"].height)
-                    ),
+            width, height = attachment.width, attachment.height
+
+            if overlay_choice == "bubble":
+                overlay = Image.open(IMAGE_OVERLAYS[overlay_choice]["path"])
+                overlay = overlay.resize((width, overlay.height))
+
+                if overlay_style in ["default", "top"]:
+                    attachment.paste(overlay, (0, 0), overlay)
+                elif overlay_style in ["bottom"]:
+                    overlay = overlay.rotate(180)
+                    attachment.paste(overlay, (0, height - overlay.height), overlay)
+                elif overlay_style in ["mask", "mask-bottom"]:
+                    # This is a lazy method of creating a mask
+                    # 1. Reduce brightness of overlay to 0 (black)
+                    # 2. Create a white square the size of the image
+                    # 3. Paste the overlay onto the white square
+
+                    overlay = ImageEnhance.Brightness(overlay).enhance(0)
+
+                    mask = Image.new("RGB", (width, height), (255, 255, 255))
+                    mask.paste(overlay, (0, 0), overlay)
+
+                    if overlay_style == "mask-bottom":
+                        mask = mask.rotate(180)
+
+                    mask = mask.convert("L")
+
+                    attachment.putalpha(mask)
+            elif overlay_choice == "gang":
+                overlay = Image.open(IMAGE_OVERLAYS[overlay_choice]["path"])
+                position = ((width - overlay.width) // 2, (height - overlay.height))
+                attachment.paste(overlay, position, overlay)
+            elif overlay_choice == "bandicam":
+                overlay = Image.open(IMAGE_OVERLAYS[overlay_choice]["path"])
+                overlay.thumbnail((width, overlay.height))
+                attachment.paste(overlay, ((width-overlay.width)//2, 0), overlay)
+            elif overlay_choice == "jerma":
+                overlay = Image.open(IMAGE_OVERLAYS[overlay_choice]["path"])
+                overlay.thumbnail((width, overlay.height))
+                attachment.paste(overlay, (width-overlay.width, height-overlay.height), overlay)
+            elif overlay_choice == "jerm-a":
+                overlay = Image.open(IMAGE_OVERLAYS[overlay_choice]["path"])
+                overlay.thumbnail((width, overlay.height))
+                attachment.paste(overlay, ((width-overlay.width)//2, height-overlay.height), overlay)
+            with BytesIO() as response:
+                attachment.save(response, format="PNG")
+
+                response.seek(0)
+                response = discord.File(response, filename="image.png")
+
+                time_taken = (datetime.datetime.now() - start_time).microseconds / 1000
+
+                embed = (
+                    discord.Embed(title=overlay_choice.capitalize(), colour=discord.Colour.orange())
+                    .set_image(url="attachment://image.png")
+                    .set_footer(text=f"{width}x{height}, {time_taken}ms")
                 )
-            elif style == "gang":
-                message_attachment.paste(
-                    self._overlays["gang"],
-                    (
-                        (
-                            (message_attachment.width - self._overlays["gang"].width)
-                            // 2
-                        ),
-                        (message_attachment.height - self._overlays["gang"].height),
-                    ),
-                    self._overlays["gang"],
-                )
 
-            message_file = BytesIO()
-            message_attachment.save(message_file, format="PNG")
-            message_file.seek(0)
-            message_file = discord.File(message_file, filename="image.png")
-
-            time_taken = datetime.datetime.now() - start_time
-            embed = (
-                discord.Embed(title=style.capitalize(), colour=discord.Colour.orange())
-                .set_image(url="attachment://image.png")
-                .set_footer(
-                    text=f"{message_attachment.width}x{message_attachment.height}, "
-                    f"{time_taken.microseconds / 1000}ms"
-                )
-            )
-
-            await ctx.reply(embed=embed, file=message_file, mention_author=False)
+                await ctx.reply(embed=embed, file=response, mention_author=False)

@@ -4,7 +4,7 @@ from lynxie.utils import get_env_or_error
 
 DISCORD_TOKEN = get_env_or_error("DISCORD_TOKEN")
 DISCORD_GUILD_ID = Object(id=1040757387033849976)
-LYNXIE_PREFIX = "~"
+LYNXIE_PREFIX = "?"
 
 DATA_PATH = "data"
 ASSETS_PATH = "assets"
@@ -49,7 +49,30 @@ TINYFOX_ANIMALS = [
 
 IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp"]
 
-IMAGE_OVERLAYS = [
-    "bubble",
-    "gang",
-]
+IMAGE_OVERLAYS = {
+    "bubble": {
+        "path": os.path.join(ASSETS_PATH, "bubble.png"),
+        "options": [
+            "default",  # Positioned at top
+            "bottom",  # Positioned at bottom
+            "mask",  # Positioned at top, but transparent
+            "mask-bottom",  # Positioned at bottom, but transparent
+        ],
+    },
+    "gang": {
+        "path": os.path.join(ASSETS_PATH, "gang.png"),
+        "options": ["default"],
+    },
+    "bandicam": {
+        "path": os.path.join(ASSETS_PATH, "bandicam.png"),
+        "options": ["default"],
+    },
+    "jerma": {
+        "path": os.path.join(ASSETS_PATH, "jerma.png"),
+        "options": ["default"],
+    },
+    "jerm-a": {
+        "path": os.path.join(ASSETS_PATH, "jerm-a.png"),
+        "options": ["default"],
+    },
+}
