@@ -22,7 +22,10 @@ class Img(commands.Cog):
         elif ctx.message.reference:
             if ctx.message.reference.resolved.attachments:
                 return ctx.message.reference.resolved.attachments[0]
-            elif ctx.message.reference.resolved.embeds and ctx.message.reference.resolved.embeds[0].image:
+            elif (
+                ctx.message.reference.resolved.embeds
+                and ctx.message.reference.resolved.embeds[0].image
+            ):
                 return ctx.message.reference.resolved.embeds[0].image
         elif ctx.message.embeds and ctx.message.embeds[0].image:
             return ctx.message.embeds[0].image
@@ -39,7 +42,9 @@ class Img(commands.Cog):
         return None
 
     @commands.command()
-    async def overlay(self, ctx, overlay_choice: str = None, overlay_style: str = "default"):
+    async def overlay(
+        self, ctx, overlay_choice: str = None, overlay_style: str = "default"
+    ):
         start_time = datetime.datetime.now()
 
         overlay_choice = overlay_choice.lower().strip() if overlay_choice else None
@@ -53,7 +58,9 @@ class Img(commands.Cog):
             return
 
         if not overlay_choice or overlay_choice not in IMAGE_OVERLAYS:
-            error = f"Invalid overlay choice! Use one of these: {', '.join(IMAGE_OVERLAYS)}"
+            error = (
+                f"Invalid overlay choice! Use one of these: {', '.join(IMAGE_OVERLAYS)}"
+            )
             await ctx.reply(embed=error_message(error))
             return
 
@@ -63,7 +70,9 @@ class Img(commands.Cog):
             return
 
         # Defaults to gwa as I cant be asked to make a better error handler
-        file_name = (image_attachments.filename or image_attachments.url or "balls").lower()
+        file_name = (
+            image_attachments.filename or image_attachments.url or "balls"
+        ).lower()
         file_extension = file_name.split(".")[-1]
         if file_extension not in IMAGE_EXTENSIONS:
             error = f"Unsupported file type! Use one of these: {', '.join(IMAGE_EXTENSIONS)}"
@@ -164,7 +173,6 @@ class Img(commands.Cog):
 
                 await ctx.reply(embed=embed, file=response, mention_author=False)
 
-
     @commands.command()
     async def saveable(self, ctx):
         start_time = datetime.datetime.now()
@@ -177,7 +185,9 @@ class Img(commands.Cog):
             return
 
         # Defaults to gwa as I cant be asked to make a better error handler
-        file_name = (image_attachments.filename or image_attachments.url or "balls").lower()
+        file_name = (
+            image_attachments.filename or image_attachments.url or "balls"
+        ).lower()
         file_extension = file_name.split(".")[-1]
         if file_extension not in IMAGE_EXTENSIONS:
             error = f"Unsupported file type! Use one of these: {', '.join(IMAGE_EXTENSIONS)}"
