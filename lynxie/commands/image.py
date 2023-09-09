@@ -16,7 +16,9 @@ class Img(commands.Cog):
         self.bot = bot
 
     @commands.command()
-    async def overlay(self, ctx, overlay_choice: str = None, overlay_style: str = "default"):
+    async def overlay(
+        self, ctx, overlay_choice: str = None, overlay_style: str = "default"
+    ):
         start_time = datetime.datetime.now()
 
         overlay_choice = overlay_choice.lower().strip() if overlay_choice else None
@@ -62,11 +64,12 @@ class Img(commands.Cog):
                 return
 
             # Defaults to gwa as I cant be asked to make a better error handler
-            filename = image_attachments.filename or image_attachments.url or "image.gwa"
+            filename = (
+                image_attachments.filename or image_attachments.url or "image.gwa"
+            )
             if not filename.split(".")[-1].lower() in IMAGE_EXTENSIONS:
-                error = (
-                    "Unsupported file type! Supported file types are "
-                    ", ".join(IMAGE_EXTENSIONS)
+                error = "Unsupported file type! Supported file types are " ", ".join(
+                    IMAGE_EXTENSIONS
                 )
                 await ctx.reply(embed=error_message(error))
                 return
@@ -131,15 +134,21 @@ class Img(commands.Cog):
             elif overlay_choice == "bandicam":
                 overlay = Image.open(IMAGE_OVERLAYS[overlay_choice]["path"])
                 overlay.thumbnail((width, overlay.height))
-                attachment.paste(overlay, ((width-overlay.width)//2, 0), overlay)
+                attachment.paste(overlay, ((width - overlay.width) // 2, 0), overlay)
             elif overlay_choice == "jerma":
                 overlay = Image.open(IMAGE_OVERLAYS[overlay_choice]["path"])
                 overlay.thumbnail((width, overlay.height))
-                attachment.paste(overlay, (width-overlay.width, height-overlay.height), overlay)
+                attachment.paste(
+                    overlay, (width - overlay.width, height - overlay.height), overlay
+                )
             elif overlay_choice == "jerm-a":
                 overlay = Image.open(IMAGE_OVERLAYS[overlay_choice]["path"])
                 overlay.thumbnail((width, overlay.height))
-                attachment.paste(overlay, ((width-overlay.width)//2, height-overlay.height), overlay)
+                attachment.paste(
+                    overlay,
+                    ((width - overlay.width) // 2, height - overlay.height),
+                    overlay,
+                )
             with BytesIO() as response:
                 attachment.save(response, format="PNG")
 
@@ -149,7 +158,10 @@ class Img(commands.Cog):
                 time_taken = (datetime.datetime.now() - start_time).microseconds / 1000
 
                 embed = (
-                    discord.Embed(title=overlay_choice.capitalize(), colour=discord.Colour.orange())
+                    discord.Embed(
+                        title=overlay_choice.capitalize(),
+                        colour=discord.Colour.orange(),
+                    )
                     .set_image(url="attachment://image.png")
                     .set_footer(text=f"{width}x{height}, {time_taken}ms")
                 )
