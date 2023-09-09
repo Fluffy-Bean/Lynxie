@@ -2,7 +2,11 @@ import os
 import dotenv
 from discord import Object
 
-DISCORD_TOKEN = dotenv.dotenv_values(".env").get("DISCORD_TOKEN") or os.environ.get("DISCORD_TOKEN") or None
+DISCORD_TOKEN = (
+    dotenv.dotenv_values(".env").get("DISCORD_TOKEN")
+    or os.environ.get("DISCORD_TOKEN")
+    or None
+)
 DISCORD_GUILD_ID = Object(id=1040757387033849976)
 LYNXIE_PREFIX = "?"
 
