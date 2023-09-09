@@ -75,4 +75,8 @@ IMAGE_OVERLAYS = {
         "path": os.path.join(ASSETS_PATH, "jerm-a.png"),
         "options": ["default"],
     },
+    "liveleak": {
+        "path": os.path.join(ASSETS_PATH, "liveleak.png"),
+        "options": ["default"],
+    },
 }
