@@ -7,4 +7,4 @@ class E621(commands.Cog):
 
     @commands.command()
     async def e621(self, ctx):
-        await ctx.reply(f":3")
+        await ctx.reply(":3")
