@@ -34,10 +34,8 @@ class Img(commands.Cog):
             async for message in channel.history(limit=10):
                 if message.attachments:
                     return message.attachments[0]
-                    break
                 if message.embeds and message.embeds[0].image:
                     return message.embeds[0].image
-                    break
 
         return None
 
