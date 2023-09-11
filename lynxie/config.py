@@ -1,6 +1,10 @@
 import os
+import requests
 import dotenv
 from discord import Object
+
+
+LYNXIE_PREFIX = "?"
 
 DISCORD_TOKEN = (
     dotenv.dotenv_values(".env").get("DISCORD_TOKEN")
@@ -8,51 +12,21 @@ DISCORD_TOKEN = (
     or None
 )
 DISCORD_GUILD_ID = Object(id=1040757387033849976)
-LYNXIE_PREFIX = "?"
+
 
 DATA_PATH = os.path.join("lynxie", "data")
 ASSETS_PATH = os.path.join("lynxie", "assets")
 
+
 DATABASE_URI = f"sqlite:///" + os.path.join(DATA_PATH, "lynxie.db")
 
+
 # https://tinyfox.dev/docs/
-# TODO: Get list from API instead of hardcoding
-# https://api.tinyfox.dev/img?animal=animal&json
-TINYFOX_ANIMALS = [
-    "chi",
-    "bear",
-    "dog",
-    "capy",
-    "caracal",
-    "chee",
-    "yote",
-    "bleat",
-    "dook",
-    "fox",
-    "yeen",
-    "jaguar",
-    "leo",
-    "lynx",
-    "mane",
-    "puma",
-    "poss",
-    "ott",
-    "manul",
-    "marten",
-    "bun",
-    "racc",
-    "wah",
-    "serval",
-    "shiba",
-    "skunk",
-    "snek",
-    "snep",
-    "tig",
-    "woof",
-]
+tinyfox_animals = requests.get("https://api.tinyfox.dev/img?animal=animal&json").json()
+TINYFOX_ANIMALS = tinyfox_animals["available"]
+
 
 IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp"]
-
 IMAGE_OVERLAYS = {
     "bubble": {
         "path": os.path.join(ASSETS_PATH, "overlays", "bubble.png"),
@@ -85,6 +59,7 @@ IMAGE_OVERLAYS = {
     },
 }
 
+
 E621_API_KEY = (
     dotenv.dotenv_values(".env").get("E621_API_KEY")
     or os.environ.get("E621_API_KEY")
@@ -96,5 +71,7 @@ E621_USERNAME = (
     or None
 )
 E621_BLACKLIST = set()
-with open(os.path.join(ASSETS_PATH, "e621_blacklist.txt"), "r") as f:
-    [E621_BLACKLIST.add(line.strip()) for line in f.readlines() if line.strip()]
+with open(os.path.join(ASSETS_PATH, "e621_blacklist.txt"), "r") as file:
+    for line in file.readlines():
+        if word := line.strip():
+            E621_BLACKLIST.add(word)
