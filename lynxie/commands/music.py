@@ -22,18 +22,13 @@ class Music(commands.Cog):
     @commands.command()
     async def play(self, ctx, *, url):
         async with ctx.typing():
-            try:
-                song_info = ytdl.extract_info(url, download=False)
-                ctx.voice_client.play(
-                    discord.FFmpegPCMAudio(song_info["url"], **ffmpeg_options)
+            song_info = ytdl.extract_info(url, download=False)
+            ctx.voice_client.play(
+                discord.FFmpegPCMAudio(
+                    song_info["url"],
+                    **ffmpeg_options
                 )
-            except Exception as err:
-                error = "An error occurred while processing this request." + str(err)
-                await ctx.reply(
-                    embed=error_message(error),
-                    mention_author=False,
-                )
-                return
+            )
 
         embed = discord.Embed(
             title="Now playing",

@@ -57,13 +57,15 @@ class Img(commands.Cog):
 
         if not overlay_choice or overlay_choice not in IMAGE_OVERLAYS:
             error = (
-                f"Invalid overlay choice! Use one of these: {', '.join(IMAGE_OVERLAYS)}"
+                f"Invalid overlay choice! Use one of "
+                f"these: {', '.join(IMAGE_OVERLAYS)}"
             )
             await ctx.reply(embed=error_message(error))
             return
 
         if overlay_style not in IMAGE_OVERLAYS[overlay_choice]["options"]:
-            error = f"{overlay_choice} has these options: {', '.join(IMAGE_OVERLAYS[overlay_choice]['options'])}"
+            error = f"{overlay_choice} has these " \
+                    f"options: {', '.join(IMAGE_OVERLAYS[overlay_choice]['options'])}"
             await ctx.reply(embed=error_message(error))
             return
 
@@ -73,7 +75,8 @@ class Img(commands.Cog):
         ).lower()
         file_extension = file_name.split(".")[-1]
         if file_extension not in IMAGE_EXTENSIONS:
-            error = f"Unsupported file type! Use one of these: {', '.join(IMAGE_EXTENSIONS)}"
+            error = f"Unsupported file type! Use one " \
+                    f"of these: {', '.join(IMAGE_EXTENSIONS)}"
             await ctx.reply(embed=error_message(error))
             return
 
@@ -188,7 +191,8 @@ class Img(commands.Cog):
         ).lower()
         file_extension = file_name.split(".")[-1]
         if file_extension not in IMAGE_EXTENSIONS:
-            error = f"Unsupported file type! Use one of these: {', '.join(IMAGE_EXTENSIONS)}"
+            error = f"Unsupported file type! Use one " \
+                    f"of these: {', '.join(IMAGE_EXTENSIONS)}"
             await ctx.reply(embed=error_message(error))
             return
 

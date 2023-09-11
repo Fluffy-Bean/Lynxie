@@ -17,12 +17,14 @@ class Animals(commands.Cog):
         animal_choice = animal_choice.lower().strip() or None
 
         if not animal_choice:
-            error = f"You need to specify an animal! Try one of these: {', '.join(TINYFOX_ANIMALS)}"
+            error = f"You need to specify an animal! " \
+                    f"Try one of these: {', '.join(TINYFOX_ANIMALS)}"
             await ctx.reply(embed=error_message(error))
             return
 
         if animal_choice not in TINYFOX_ANIMALS:
-            error = f"That animal doesn't exist! Try one of these: {', '.join(TINYFOX_ANIMALS)}"
+            error = f"That animal doesn't exist! " \
+                    f"Try one of these: {', '.join(TINYFOX_ANIMALS)}"
             await ctx.reply(embed=error_message(error))
             return
 
