@@ -224,10 +224,7 @@ class Img(commands.Cog):
                 response.seek(0)
                 response = discord.File(response, filename="image.gif")
 
-                time_taken = (
-                    (datetime.datetime.now() - start_time).microseconds
-                    / 1000
-                )
+                time_taken = (datetime.datetime.now() - start_time).microseconds / 1000
 
                 embed = (
                     discord.Embed(
