@@ -72,7 +72,7 @@ class E621(commands.Cog):
         embed.add_field(
             name="Score",
             value=f"^ {response['posts'][0]['score']['up']} | "
-                  f"v {response['posts'][0]['score']['down']}",
+            f"v {response['posts'][0]['score']['down']}",
         )
         embed.add_field(
             name="Favorites",
@@ -86,13 +86,14 @@ class E621(commands.Cog):
         )
         embed.add_field(
             name="Tags",
-            value=", ".join(response["posts"][0]["tags"]["general"]) or "No tags provided.",
+            value=", ".join(response["posts"][0]["tags"]["general"])
+            or "No tags provided.",
             inline=False,
         )
 
         embed.set_footer(
             text=f"ID: {response['posts'][0]['id']} | "
-                 f"Created: {response['posts'][0]['created_at']}"
+            f"Created: {response['posts'][0]['created_at']}"
         )
 
         embed.set_image(url=response["posts"][0]["file"]["url"])
