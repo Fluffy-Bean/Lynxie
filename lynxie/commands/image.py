@@ -218,12 +218,16 @@ class Img(commands.Cog):
                 response.seek(0)
                 response = discord.File(response, filename="image.gif")
 
-                time_taken = (datetime.datetime.now() - start_time).microseconds / 1000
+                time_taken = (
+                    (datetime.datetime.now() - start_time).microseconds
+                    / 1000
+                )
 
                 embed = (
                     discord.Embed(
                         title="Saveable",
-                        description="Image converted to GIF, click the star to save it :3",
+                        description="Image converted to GIF, "
+                        "click the star to save it :3",
                         colour=discord.Colour.orange(),
                     )
                     .set_image(url="attachment://image.gif")
