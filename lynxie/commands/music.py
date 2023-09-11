@@ -24,10 +24,7 @@ class Music(commands.Cog):
         async with ctx.typing():
             song_info = ytdl.extract_info(url, download=False)
             ctx.voice_client.play(
-                discord.FFmpegPCMAudio(
-                    song_info["url"],
-                    **ffmpeg_options
-                )
+                discord.FFmpegPCMAudio(song_info["url"], **ffmpeg_options)
             )
 
         embed = discord.Embed(
