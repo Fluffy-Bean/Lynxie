@@ -15,7 +15,7 @@ class Help(commands.Cog):
             "stop": "Stop the current song and leave the voice channel",
             "animal <animal>": "Get a random image of an animal!",
             "overlay <image> <style>": "Overlay an image with a "
-                                       "style, e.g. `bubble mask`",
+            "style, e.g. `bubble mask`",
             "saveable": "Turn image into a GIF to save within Discord",
         }
 
