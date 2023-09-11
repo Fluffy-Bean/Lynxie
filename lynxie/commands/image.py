@@ -19,10 +19,10 @@ class Img(commands.Cog):
     async def get_image_attachments(ctx):
         if ctx.message.attachments:
             return ctx.message.attachments[0]
-        elif ctx.message.reference:
+        if ctx.message.reference:
             if ctx.message.reference.resolved.attachments:
                 return ctx.message.reference.resolved.attachments[0]
-            elif (
+            if (
                 ctx.message.reference.resolved.embeds
                 and ctx.message.reference.resolved.embeds[0].image
             ):
