@@ -51,6 +51,9 @@ def error_message(error: str) -> discord.Embed:
         title="Error :(",
         description=error,
         colour=discord.Colour.red(),
-    ).set_footer(text=f"For more information, use the " f"{LYNXIE_PREFIX}help command.")
+    )
+    embed.set_footer(
+        text=f"For more information, use the " f"{LYNXIE_PREFIX}help command."
+    )
 
     return embed

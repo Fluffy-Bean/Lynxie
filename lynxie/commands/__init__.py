@@ -4,6 +4,7 @@ from .hello import Hello
 from .music import Music
 from .animals import Animals
 from .image import Img
+from .e621 import E621
 
 __all__ = [
     "Help",
@@ -12,4 +13,5 @@ __all__ = [
     "Music",
     "Animals",
     "Img",
+    "E621",
 ]

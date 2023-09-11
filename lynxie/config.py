@@ -55,7 +55,7 @@ IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp"]
 
 IMAGE_OVERLAYS = {
     "bubble": {
-        "path": os.path.join(ASSETS_PATH, "bubble.png"),
+        "path": os.path.join(ASSETS_PATH, "overlays", "bubble.png"),
         "options": [
             "default",  # Positioned at top
             "bottom",  # Positioned at bottom
@@ -64,23 +64,37 @@ IMAGE_OVERLAYS = {
         ],
     },
     "gang": {
-        "path": os.path.join(ASSETS_PATH, "gang.png"),
+        "path": os.path.join(ASSETS_PATH, "overlays", "gang.png"),
         "options": ["default"],
     },
     "bandicam": {
-        "path": os.path.join(ASSETS_PATH, "bandicam.png"),
+        "path": os.path.join(ASSETS_PATH, "overlays", "bandicam.png"),
         "options": ["default"],
     },
     "jerma": {
-        "path": os.path.join(ASSETS_PATH, "jerma.png"),
+        "path": os.path.join(ASSETS_PATH, "overlays", "jerma.png"),
         "options": ["default"],
     },
     "jerm-a": {
-        "path": os.path.join(ASSETS_PATH, "jerm-a.png"),
+        "path": os.path.join(ASSETS_PATH, "overlays", "jerm-a.png"),
         "options": ["default"],
     },
     "liveleak": {
-        "path": os.path.join(ASSETS_PATH, "liveleak.png"),
+        "path": os.path.join(ASSETS_PATH, "overlays", "liveleak.png"),
         "options": ["default"],
     },
 }
+
+E621_API_KEY = (
+    dotenv.dotenv_values(".env").get("E621_API_KEY")
+    or os.environ.get("E621_API_KEY")
+    or None
+)
+E621_USERNAME = (
+    dotenv.dotenv_values(".env").get("E621_USERNAME")
+    or os.environ.get("E621_USERNAME")
+    or None
+)
+E621_BLACKLIST = set()
+with open(os.path.join(ASSETS_PATH, "e621_blacklist.txt"), "r") as f:
+    [E621_BLACKLIST.add(line.strip()) for line in f.readlines() if line.strip()]
