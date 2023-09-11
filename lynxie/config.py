@@ -13,7 +13,7 @@ LYNXIE_PREFIX = "?"
 DATA_PATH = os.path.join("lynxie", "data")
 ASSETS_PATH = os.path.join("lynxie", "assets")
 
-DATABASE_URI = f"sqlite:///" + os.path.join(DATA_PATH, "lynxie.db")
+DATABASE_URI = "sqlite:///" + os.path.join(DATA_PATH, "lynxie.db")
 
 # https://tinyfox.dev/docs/
 # TODO: Get list from API instead of hardcoding
