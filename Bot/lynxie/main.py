@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# vim: set fileencoding=utf-8 :
+
 import asyncio
 
 import discord
@@ -43,7 +46,11 @@ async def on_command(ctx):
 
 @lynxie.event
 async def on_command_error(ctx, error):
+    if isinstance(error, commands.CommandNotFound):
+        return
+
     print(error)
+
     error = "An internal error occurred while processing your command, oopsie..."
     await ctx.reply(embed=error_message(error), delete_after=5)
 

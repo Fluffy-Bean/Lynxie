@@ -16,9 +16,10 @@ class Img(commands.Cog):
         self.bot = bot
 
     @staticmethod
-    async def get_image_attachments(ctx):
+    async def get_image_attachments(ctx) -> discord.Attachment or None:
         if ctx.message.attachments:
             return ctx.message.attachments[0]
+
         if ctx.message.reference:
             if ctx.message.reference.resolved.attachments:
                 return ctx.message.reference.resolved.attachments[0]
@@ -27,15 +28,17 @@ class Img(commands.Cog):
                 and ctx.message.reference.resolved.embeds[0].image
             ):
                 return ctx.message.reference.resolved.embeds[0].image
-        elif ctx.message.embeds and ctx.message.embeds[0].image:
+
+        if ctx.message.embeds and ctx.message.embeds[0].image:
             return ctx.message.embeds[0].image
-        else:
-            channel = ctx.guild.get_channel(ctx.channel.id)
-            async for message in channel.history(limit=10):
-                if message.attachments:
-                    return message.attachments[0]
-                if message.embeds and message.embeds[0].image:
-                    return message.embeds[0].image
+
+        channel = ctx.guild.get_channel(ctx.channel.id)
+        async for message in channel.history(limit=10):
+            if message.attachments:
+                return message.attachments[0]
+
+            if message.embeds and message.embeds[0].image:
+                return message.embeds[0].image
 
         return None
 

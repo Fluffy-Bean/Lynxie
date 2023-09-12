@@ -1,4 +1,5 @@
 import os
+import re
 import requests
 import dotenv
 from discord import Object
@@ -14,8 +15,9 @@ DISCORD_TOKEN = (
 DISCORD_GUILD_ID = Object(id=1040757387033849976)
 LYNXIE_PREFIX = "?"
 
-DATA_PATH = os.path.join("lynxie", "data")
-ASSETS_PATH = os.path.join("lynxie", "assets")
+DATA_PATH = os.path.join("/app", "data")
+ASSETS_PATH = os.path.join("/app", "assets")
+
 
 DATABASE_URI = "sqlite:///" + os.path.join(DATA_PATH, "lynxie.db")
 
@@ -74,3 +76,12 @@ with open(os.path.join(ASSETS_PATH, "e621_blacklist.txt"), "r") as file:
     for line in file.readlines():
         if word := line.strip():
             E621_BLACKLIST.add(word)
+
+
+BAD_WORDS = []
+_bad_words_request = requests.get(
+    "https://raw.githubusercontent.com/mogade/badwords/master/en.txt"
+)
+for word in _bad_words_request.text.split("\n"):
+    if word := word.strip():
+        BAD_WORDS.append(re.compile(word, re.IGNORECASE))
