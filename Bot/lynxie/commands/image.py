@@ -7,8 +7,8 @@ from PIL import Image, ImageEnhance
 import discord
 from discord.ext import commands
 
-from .config import IMAGE_EXTENSIONS, IMAGE_OVERLAYS
-from .utils import error_message
+from lynxie.config import IMAGE_EXTENSIONS, IMAGE_OVERLAYS
+from lynxie.utils import error_message
 
 
 class Img(commands.Cog):

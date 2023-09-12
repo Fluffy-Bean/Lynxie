@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from .config import LYNXIE_PREFIX
+from lynxie.config import LYNXIE_PREFIX
 
 
 class Help(commands.Cog):

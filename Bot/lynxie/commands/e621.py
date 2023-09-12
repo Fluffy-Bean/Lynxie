@@ -5,8 +5,8 @@ import requests
 import discord
 from discord.ext import commands
 
-from .config import E621_API_KEY, E621_USERNAME, E621_BLACKLIST
-from .utils import error_message
+from lynxie.config import E621_API_KEY, E621_USERNAME, E621_BLACKLIST
+from lynxie.utils import error_message
 
 
 _E621_AUTH = f"{E621_USERNAME}:{E621_API_KEY}".encode("utf-8")

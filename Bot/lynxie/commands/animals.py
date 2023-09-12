@@ -4,8 +4,8 @@ from io import BytesIO
 import discord
 from discord.ext import commands
 
-from .config import TINYFOX_ANIMALS
-from .utils import error_message
+from lynxie.config import TINYFOX_ANIMALS
+from lynxie.utils import error_message
 
 
 class Animals(commands.Cog):
