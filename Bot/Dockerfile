@@ -12,7 +12,7 @@ RUN apk update
 RUN apk --no-cache add python3 py3-pip curl
 
 RUN curl -sSL https://install.python-poetry.org | python3 -
-RUN poetry install
-RUN poetry run python3 database.py
+RUN /root/.local/bin/poetry install
+RUN /root/.local/bin/poetry run python3 database.py
 
-CMD ["poetry", "run", "python3", "main.py"]
+CMD ["/root/.local/bin/poetry", "run", "python3", "main.py"]
