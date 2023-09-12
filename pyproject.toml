@@ -19,7 +19,6 @@ webdriver-manager = "^4.0.0"
 flask = "^2.3.3"
 yt-dlp = "^2023.7.6"
 pillow = "^10.0.0"
-opencv-python = "^4.8.0.76"
 
 
 [build-system]
