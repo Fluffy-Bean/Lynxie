@@ -8,12 +8,10 @@ from discord.ext import commands
 from discord.gateway import DiscordWebSocket
 
 from lynxie.config import DISCORD_TOKEN, LYNXIE_PREFIX
-from lynxie.database import CommandHistory, Database
 from lynxie.utils import mobile_status, error_message
 from lynxie.commands import Help, Ping, Hello, Music, Animals, Img, E621
 
 
-db = Database()
 DiscordWebSocket.identify = mobile_status
 lynxie = commands.Bot(
     intents=discord.Intents.all(),
@@ -31,17 +29,6 @@ async def on_ready():
 async def on_command(ctx):
     if ctx.author == lynxie.user or ctx.author.bot:
         return
-
-    query = CommandHistory(
-        command=ctx.command.name,
-        user=ctx.author.id,
-        channel=ctx.channel.id,
-        guild=ctx.guild.id,
-        timestamp=ctx.message.created_at,
-    )
-
-    db.session.add(query)
-    db.session.commit()
 
 
 @lynxie.event

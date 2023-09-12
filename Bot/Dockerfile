@@ -17,10 +17,7 @@ RUN apk --no-cache add python3 py3-pip curl
 
 # Install poetry
 RUN curl -sSL https://install.python-poetry.org | python3 -
-
-# Install the app
 RUN /root/.local/bin/poetry install
-RUN /root/.local/bin/poetry run python3 /app/lynxie/database.py
 
 # Run the app
 CMD ["/root/.local/bin/poetry", "run", "python3", "/app/lynxie/main.py"]
