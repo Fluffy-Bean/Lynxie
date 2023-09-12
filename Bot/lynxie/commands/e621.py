@@ -102,7 +102,12 @@ class E621(commands.Cog):
         embed.add_field(
             name="Tags",
             value=(
-                ", ".join(["`"+general_tags[i]+"`" for i in range(min(len(general_tags), 20))])
+                ", ".join(
+                    [
+                        "`" + general_tags[i] + "`"
+                        for i in range(min(len(general_tags), 20))
+                    ]
+                )
                 or "No tags provided."
             ),
             inline=False,
