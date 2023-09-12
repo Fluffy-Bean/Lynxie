@@ -1,7 +1,7 @@
 import yt_dlp
 import discord
 from discord.ext import commands
-from lynxie.utils import error_message
+from .utils import error_message
 
 
 ffmpeg_options = {"options": "-vn"}

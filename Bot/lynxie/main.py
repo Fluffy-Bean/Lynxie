@@ -7,10 +7,10 @@ import discord
 from discord.ext import commands
 from discord.gateway import DiscordWebSocket
 
-from lynxie.config import DISCORD_TOKEN, LYNXIE_PREFIX
-from lynxie.database import CommandHistory, Database
-from lynxie.utils import mobile_status, error_message
-from lynxie.commands import Help, Ping, Hello, Music, Animals, Img, E621
+from .config import DISCORD_TOKEN, LYNXIE_PREFIX
+from .database import CommandHistory, Database
+from .utils import mobile_status, error_message
+from .commands import Help, Ping, Hello, Music, Animals, Img, E621
 
 
 db = Database()
