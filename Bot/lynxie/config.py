@@ -15,8 +15,8 @@ DISCORD_TOKEN = (
 DISCORD_GUILD_ID = Object(id=1040757387033849976)
 LYNXIE_PREFIX = "?"
 
-DATA_PATH = os.path.join("/app", "data")
-ASSETS_PATH = os.path.join("/app", "assets")
+DATA_PATH = os.path.join("lynxie", "data")
+ASSETS_PATH = os.path.join("lynxie", "assets")
 
 
 DATABASE_URI = "sqlite:///" + os.path.join(DATA_PATH, "lynxie.db")

@@ -7,7 +7,7 @@ RUN mkdir /app/lynxie
 WORKDIR /app
 
 # Copy the app files
-COPY ./lynxie/ /app/lynxie/
+COPY ./lynxie /app/lynxie
 COPY ./poetry.lock /app
 COPY ./pyproject.toml /app
 
@@ -17,11 +17,10 @@ RUN apk --no-cache add python3 py3-pip curl
 
 # Install poetry
 RUN curl -sSL https://install.python-poetry.org | python3 -
-RUN export PATH="/root/.local/bin:$PATH"
 
 # Install the app
-RUN poetry install
-RUN poetry run python3 database.py
+RUN /root/.local/bin/poetry install
+RUN /root/.local/bin/poetry run python3 /app/lynxie/database.py
 
 # Run the app
-CMD ["poetry", "run", "python3", "main.py"]
+CMD ["/root/.local/bin/poetry", "run", "python3", "/app/lynxie/main.py"]

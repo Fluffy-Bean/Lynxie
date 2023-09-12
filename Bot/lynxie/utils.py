@@ -1,7 +1,7 @@
 import sys
 import discord
 from discord.gateway import _log
-from .config import LYNXIE_PREFIX
+from lynxie.config import LYNXIE_PREFIX
 
 
 async def mobile_status(self):
