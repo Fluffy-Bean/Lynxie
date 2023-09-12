@@ -5,12 +5,14 @@ RUN mkdir /app && mkdir /app/data
 WORKDIR /app
 
 COPY ./lynxie /app
-COPY ./requirements.txt /app
+COPY ./poetry.lock /app
+COPY ./pyproject.toml /app
 
 RUN apk update
-RUN apk --no-cache add python3 py3-pip
+RUN apk --no-cache add python3 py3-pip curl
 
-RUN pip install --no-cache-dir -r requirements.txt
-RUN python3 database.py
+RUN curl -sSL https://install.python-poetry.org | python3 -
+RUN poetry install
+RUN poetry run python3 database.py
 
-CMD ["python3", "main.py"]
+CMD ["poetry", "run", "python3", "main.py"]
