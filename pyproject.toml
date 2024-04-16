@@ -9,12 +9,12 @@ readme = ".github/README.md"
 python = "^3.11"
 discord = "^2.3.2"
 discord-py = {extras = ["voice"], version = "^2.3.2"}
-black = "^23.7.0"
+black = "^24.3.0"
 sqlalchemy = "^2.0.20"
 python-dotenv = "^1.0.0"
 requests = "^2.31.0"
-yt-dlp = "^2023.9.24"
-pillow = "^10.0.1"
+yt-dlp = "^2024.04.09"
+pillow = "^10.3.0"
 
 
 [build-system]
