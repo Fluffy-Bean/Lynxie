@@ -1,9 +1,6 @@
-# IDEA
-/shelf/
-/workspace.xml
-/httpRequests/
-/dataSources/
-/dataSources.local.xml
+# Editor
 .idea
+.vscode
 
+# General
 .env
