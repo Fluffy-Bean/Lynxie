@@ -24,7 +24,7 @@ func registerPong(a *app.App) app.Callback {
 			latency bool
 		}
 
-		cmd := flag.NewFlagSet("pong", flag.ContinueOnError)
+		cmd := flag.NewFlagSet("", flag.ContinueOnError)
 		cmd.BoolVar(&options.latency, "latency", false, "Display the latency of ping")
 		cmd.Parse(args)
 

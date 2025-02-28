@@ -33,7 +33,7 @@ func registerAnimal(a *app.App) app.Callback {
 			animal string
 		}
 
-		cmd := flag.NewFlagSet("pong", flag.ContinueOnError)
+		cmd := flag.NewFlagSet("", flag.ContinueOnError)
 		cmd.StringVar(&options.animal, "animal", "", "Get an image of an animal!")
 		cmd.Parse(args)
 

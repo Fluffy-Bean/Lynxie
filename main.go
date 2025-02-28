@@ -17,6 +17,7 @@ func main() {
 
 	commands.RegisterMetaCommands(a)
 	commands.RegisterTinyfoxCommands(a)
+	commands.RegisterPorbCommands(a)
 
 	a.Run()
 }
