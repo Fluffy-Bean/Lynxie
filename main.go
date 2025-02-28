@@ -10,7 +10,7 @@ import (
 
 func main() {
 	a := app.NewApp(app.Config{
-		Prefix:  "?",
+		Prefix:  ">",
 		Token:   os.Getenv("TOKEN"),
 		Intents: discordgo.IntentsGuildMessages,
 	})

@@ -2,13 +2,17 @@ package app
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
 
+	"github.com/Fluffy-Bean/lynxie/utils"
 	"github.com/bwmarrin/discordgo"
 )
+
+type Callback func(h *Handler, args []string) Error
 
 type Config struct {
 	Prefix  string
@@ -18,17 +22,17 @@ type Config struct {
 
 type App struct {
 	Config   Config
-	Commands map[string]func(h *Handler, args []string)
+	Commands map[string]Callback
 }
 
 func NewApp(config Config) *App {
 	return &App{
 		Config:   config,
-		Commands: make(map[string]func(h *Handler, args []string)),
+		Commands: make(map[string]Callback),
 	}
 }
 
-func (a *App) RegisterCommand(cmd string, f func(h *Handler, args []string)) {
+func (a *App) RegisterCommand(cmd string, f Callback) {
 	a.Commands[cmd] = f
 }
 
@@ -59,36 +63,78 @@ func (a *App) Run() {
 }
 
 type Handler struct {
-	Session *discordgo.Session
-	Message *discordgo.MessageCreate
+	Session   *discordgo.Session
+	Message   *discordgo.MessageCreate
+	Reference *discordgo.MessageReference
 }
 
 func (a *App) handler(session *discordgo.Session, message *discordgo.MessageCreate) {
 	h := &Handler{
 		Session: session,
 		Message: message,
+		Reference: &discordgo.MessageReference{
+			ChannelID: message.ChannelID,
+			MessageID: message.ID,
+		},
 	}
 
 	if h.Message.Author.ID == h.Session.State.User.ID {
 		return
 	}
-
 	if h.Message.Author.Bot {
 		return
 	}
 
-	var command string
+	var cmd string
 	var args string
 
-	command = h.Message.Content
-	command = strings.TrimSpace(command)
-	command = strings.TrimPrefix(command, a.Config.Prefix)
-	command, args, _ = strings.Cut(command, " ")
+	cmd = h.Message.Content
+	cmd = strings.TrimPrefix(cmd, a.Config.Prefix)
+	cmd, args, _ = strings.Cut(cmd, " ")
 
-	callback, ok := a.Commands[command]
+	callback, ok := a.Commands[cmd]
 	if !ok {
+		// Falling back to default help command
+		if cmd == "help" {
+			printHelp(a, h)
+		}
+
 		return
 	}
 
-	callback(h, strings.Split(args, " "))
+	h.Session.ChannelTyping(h.Message.ChannelID)
+
+	err := callback(h, strings.Split(args, " "))
+	if !err.Ok() {
+		printError(a, h, err)
+	}
+}
+
+func printHelp(a *App, h *Handler) {
+	var commands []string
+	for cmd := range a.Commands {
+		commands = append(commands, cmd)
+	}
+
+	h.Session.ChannelMessageSendComplex(h.Message.ChannelID, &discordgo.MessageSend{
+		Embed: &discordgo.MessageEmbed{
+			Title:       "Help",
+			Description: strings.Join(commands, "\n"),
+			Color:       utils.ColorFromRGB(255, 255, 255),
+		},
+		Reference: h.Reference,
+	})
+}
+
+func printError(a *App, h *Handler, e Error) {
+	log.Println(e.Err)
+
+	h.Session.ChannelMessageSendComplex(h.Message.ChannelID, &discordgo.MessageSend{
+		Embed: &discordgo.MessageEmbed{
+			Title:       "Error",
+			Description: e.Msg,
+			Color:       utils.ColorFromRGB(255, 0, 0),
+		},
+		Reference: h.Reference,
+	})
 }

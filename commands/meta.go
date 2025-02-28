@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/Fluffy-Bean/lynxie/app"
+	"github.com/Fluffy-Bean/lynxie/utils"
+	"github.com/bwmarrin/discordgo"
 )
 
 func RegisterMetaCommands(a *app.App) {
@@ -16,8 +18,8 @@ func RegisterMetaCommands(a *app.App) {
 	a.RegisterCommand("debug", registerDebug(a))
 }
 
-func registerPong(a *app.App) func(h *app.Handler, args []string) {
-	return func(h *app.Handler, args []string) {
+func registerPong(a *app.App) app.Callback {
+	return func(h *app.Handler, args []string) app.Error {
 		var options struct {
 			latency bool
 		}
@@ -26,22 +28,27 @@ func registerPong(a *app.App) func(h *app.Handler, args []string) {
 		cmd.BoolVar(&options.latency, "latency", false, "Display the latency of ping")
 		cmd.Parse(args)
 
+		var content string
 		if options.latency {
-			h.Session.ChannelMessageSend(
-				h.Message.ChannelID,
-				fmt.Sprintf("Pong! %dms", h.Session.HeartbeatLatency().Milliseconds()),
-			)
+			content = fmt.Sprintf("Pong! %dms", h.Session.HeartbeatLatency().Milliseconds())
 		} else {
-			h.Session.ChannelMessageSend(
-				h.Message.ChannelID,
-				"Pong!",
-			)
+			content = "Pong!"
 		}
+
+		h.Session.ChannelMessageSendComplex(h.Message.ChannelID, &discordgo.MessageSend{
+			Embed: &discordgo.MessageEmbed{
+				Description: content,
+				Color:       utils.ColorFromRGB(255, 255, 255),
+			},
+			Reference: h.Reference,
+		})
+
+		return app.Error{}
 	}
 }
 
-func registerDebug(a *app.App) func(h *app.Handler, args []string) {
-	return func(h *app.Handler, args []string) {
+func registerDebug(a *app.App) app.Callback {
+	return func(h *app.Handler, args []string) app.Error {
 		modified := false
 		revision := "-"
 		tags := "-"
@@ -65,17 +72,26 @@ func registerDebug(a *app.App) func(h *app.Handler, args []string) {
 			revision += " (uncommitted changes)"
 		}
 
-		h.Session.ChannelMessageSend(
-			h.Message.ChannelID,
-			fmt.Sprintf(
-				"```  Revision :: %s\nBuild Tags :: %s\nGo version :: %s\n   OS/Arch :: %s\n  GC Count :: %d\nLocal Time :: %s```",
-				revision,
-				tags,
-				_go,
-				runtime.GOOS+"/"+runtime.GOARCH,
-				gcCount,
-				localTime,
-			),
-		)
+		h.Session.ChannelMessageSendComplex(h.Message.ChannelID, &discordgo.MessageSend{
+			Embed: &discordgo.MessageEmbed{
+				Description: strings.Join(
+					[]string{
+						"```",
+						"Revision:     " + revision,
+						"Build Tags:   " + tags,
+						"Go version:   " + _go,
+						"OS/Arch:      " + runtime.GOOS + "/" + runtime.GOARCH,
+						"GC Count:     " + fmt.Sprint(gcCount),
+						"Local Time:   " + localTime,
+						"```",
+					},
+					"\n",
+				),
+				Color: utils.ColorFromRGB(255, 255, 255),
+			},
+			Reference: h.Reference,
+		})
+
+		return app.Error{}
 	}
 }
