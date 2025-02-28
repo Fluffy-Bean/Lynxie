@@ -23,7 +23,7 @@ func registerAnimal(a *app.App) func(h *app.Handler, args []string) {
 		}
 
 		cmd := flag.NewFlagSet("pong", flag.ContinueOnError)
-		cmd.StringVar(&options.animal, "animal", "serval", "Get an image of an animal!")
+		cmd.StringVar(&options.animal, "animal", "wah", "Get an image of an animal!")
 		cmd.Parse(args)
 
 		req, err := http.NewRequest(http.MethodGet, "https://api.tinyfox.dev/img?animal="+options.animal, nil)
