@@ -4,7 +4,9 @@ import (
 	"os"
 
 	"github.com/Fluffy-Bean/lynxie/app"
-	"github.com/Fluffy-Bean/lynxie/commands"
+	"github.com/Fluffy-Bean/lynxie/commands/debug"
+	"github.com/Fluffy-Bean/lynxie/commands/porb"
+	"github.com/Fluffy-Bean/lynxie/commands/tinyfox"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -15,9 +17,9 @@ func main() {
 		Intents: discordgo.IntentsGuildMessages,
 	})
 
-	commands.RegisterMetaCommands(a)
-	commands.RegisterTinyfoxCommands(a)
-	commands.RegisterPorbCommands(a)
+	debug.RegisterDebugCommands(a)
+	tinyfox.RegisterTinyfoxCommands(a)
+	porb.RegisterPorbCommands(a)
 
 	a.Run()
 }
