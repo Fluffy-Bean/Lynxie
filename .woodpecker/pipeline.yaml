@@ -1,0 +1,25 @@
+when:
+  - event: push
+    branch: main
+
+steps:
+  - name: build
+    image: golang:1.24-alpine3.20
+    commands:
+      - go mod tidy
+      - go build .
+  - name: deploy
+    image: alpine:latest
+    commands:
+      - apk add --no-cache openssh-client
+      - mkdir -p ~/.ssh
+      - echo "$SSH_KEY" > ~/.ssh/id_rsa
+      - chmod 600 ~/.ssh/id_rsa
+      - ssh -o StrictHostKeyChecking=no uncertainty@192.168.0.44 "rm $COPY_TO || true"
+      - scp -o StrictHostKeyChecking=no $COPY_FROM uncertainty@192.168.0.44:$COPY_TO
+      - ssh -o StrictHostKeyChecking=no uncertainty@192.168.0.44 "doas service lynxie restart"
+    environment:
+      COPY_FROM: lynxie
+      COPY_TO: /home/uncertainty/lynxie
+      SSH_KEY:
+        from_secret: ssh_key

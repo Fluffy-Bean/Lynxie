@@ -1,0 +1,38 @@
+#!/sbin/openrc-run
+
+LYNXIE_USER="uncertainty"
+LYNXIE_CMD="/home/uncertainty/lynxie"
+APP_NAME="lynxie"
+
+command="$LYNXIE_CMD"
+command_args=""
+command_user="$LYNXIE_USER"
+pidfile="/var/run/${APP_NAME}.pid"
+output_log="/var/log/${APP_NAME}.log"
+error_log="/var/log/${APP_NAME}_error.log"
+
+depend() {
+        need net
+}
+
+start() {
+        ebegin "Starting ${APP_NAME}"
+
+        export E621_USERNAME=""
+        export E621_PASSWORD=""
+        export TOKEN=""
+
+        start-stop-daemon --start --user "$LYNXIE_USER" \
+                          --make-pidfile --pidfile "$pidfile" \
+                          --exec "$command" -- $command_args >> "$output_log" 2>> "$error_log" &
+
+        eend $?
+}
+
+stop() {
+        ebegin "Stopping ${APP_NAME}"
+
+        start-stop-daemon --stop --pidfile "$pidfile"
+
+        eend $?
+}
