@@ -1,4 +1,4 @@
-package commands
+package tinyfox
 
 import (
 	"errors"
@@ -13,44 +13,46 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+var client = http.Client{
+	Timeout: 10 * time.Second,
+}
+
 func RegisterTinyfoxCommands(a *app.App) {
 	a.RegisterCommand("animal", registerAnimal(a))
 }
 
+var animals = []string{
+	"fox", "yeen", "dog", "guara", "serval", "ott", "jackal", "bleat", "woof", "chi", "puma", "skunk", "tig", "wah",
+	"manul", "snep", "jaguar", "badger", "chee", "racc", "bear", "capy", "bun", "marten", "caracal", "snek",
+	"shiba", "dook", "leo", "yote", "poss", "chee", "lynx",
+}
+
 func registerAnimal(a *app.App) app.Callback {
-	animals := []string{
-		"fox", "yeen", "dog", "guara", "serval", "ott", "jackal", "bleat", "woof", "chi", "puma", "skunk", "tig", "wah",
-		"manul", "snep", "jaguar", "badger", "chee", "racc", "bear", "capy", "bun", "marten", "caracal", "snek",
-		"shiba", "dook", "leo", "yote", "poss", "chee", "lynx",
-	}
-
-	client := http.Client{
-		Timeout: 10 * time.Second,
-	}
-
 	return func(h *app.Handler, args []string) app.Error {
 		var options struct {
-			animal string
+			Kind string
 		}
 
 		cmd := flag.NewFlagSet("", flag.ContinueOnError)
-		cmd.StringVar(&options.animal, "animal", "", "Get an image of an animal!")
+
+		cmd.StringVar(&options.Kind, "kind", "", "Animal kind to search for")
+
 		cmd.Parse(args)
 
-		if options.animal == "" {
+		if options.Kind == "" {
 			return app.Error{
 				Msg: "Animal name is required!",
 				Err: errors.New("animal name is required"),
 			}
 		}
-		if !slices.Contains(animals, options.animal) {
+		if !slices.Contains(animals, options.Kind) {
 			return app.Error{
-				Msg: fmt.Sprintf("Animal %s is invalid", options.animal),
+				Msg: fmt.Sprintf("Animal %s is invalid", options.Kind),
 				Err: errors.New("entered invalid animal name"),
 			}
 		}
 
-		req, err := http.NewRequest(http.MethodGet, "https://api.tinyfox.dev/img?animal="+options.animal, nil)
+		req, err := http.NewRequest(http.MethodGet, "https://api.tinyfox.dev/img?animal="+options.Kind, nil)
 		if err != nil {
 			return app.Error{
 				Msg: "Failed to make request",
