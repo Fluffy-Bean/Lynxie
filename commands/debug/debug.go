@@ -18,8 +18,6 @@ func RegisterDebugCommands(a *app.App) {
 
 func registerDebug(a *app.App) app.Callback {
 	return func(h *app.Handler, args []string) app.Error {
-		modified := false
-		revision := "-"
 		buildTags := "-"
 		goVersion := strings.TrimPrefix(runtime.Version(), "go")
 		gcCount := runtime.MemStats{}.NumGC
@@ -29,28 +27,15 @@ func registerDebug(a *app.App) app.Callback {
 		info, _ := debug.ReadBuildInfo()
 		for _, setting := range info.Settings {
 			switch setting.Key {
-			case "vcs.revision":
-				revision = setting.Value
-			case "vcs.modified":
-				modified = setting.Value == "true"
 			case "-tags":
 				buildTags = strings.ReplaceAll(setting.Value, ",", " ")
 			}
-		}
-
-		if modified {
-			revision += " (modified)"
 		}
 
 		h.Session.ChannelMessageSendComplex(h.Message.ChannelID, &discordgo.MessageSend{
 			Embed: &discordgo.MessageEmbed{
 				Title: "Lynxie",
 				Fields: []*discordgo.MessageEmbedField{
-					{
-						Name:   "Revision",
-						Value:  revision,
-						Inline: false,
-					},
 					{
 						Name:   "Build Tags",
 						Value:  buildTags,
