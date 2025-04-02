@@ -21,19 +21,25 @@ type Config struct {
 }
 
 type App struct {
-	Config   Config
-	Commands map[string]Callback
+	Config         Config
+	Commands       map[string]Callback
+	CommandAliases map[string]string
 }
 
 func NewApp(config Config) *App {
 	return &App{
-		Config:   config,
-		Commands: make(map[string]Callback),
+		Config:         config,
+		Commands:       make(map[string]Callback),
+		CommandAliases: make(map[string]string),
 	}
 }
 
 func (a *App) RegisterCommand(cmd string, f Callback) {
 	a.Commands[cmd] = f
+}
+
+func (a *App) RegisterCommandAlias(alias, cmd string) {
+	a.CommandAliases[alias] = cmd
 }
 
 func (a *App) Run() {
@@ -91,6 +97,11 @@ func (a *App) handler(session *discordgo.Session, message *discordgo.MessageCrea
 	cmd = h.Message.Content
 	cmd = strings.TrimPrefix(cmd, a.Config.Prefix)
 	cmd, args, _ = strings.Cut(cmd, " ")
+
+	alias, ok := a.CommandAliases[cmd]
+	if ok {
+		cmd = alias
+	}
 
 	callback, ok := a.Commands[cmd]
 	if !ok {

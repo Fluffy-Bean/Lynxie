@@ -21,9 +21,46 @@ var client = http.Client{
 var username = os.Getenv("E621_USERNAME")
 var password = os.Getenv("E621_PASSWORD")
 
+type post struct {
+	Id        int       `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	File      struct {
+		Width  int    `json:"width"`
+		Height int    `json:"height"`
+		Ext    string `json:"ext"`
+		Size   int    `json:"size"`
+		Md5    string `json:"md5"`
+		Url    string `json:"url"`
+	} `json:"file"`
+	Score struct {
+		Up    int `json:"up"`
+		Down  int `json:"down"`
+		Total int `json:"total"`
+	} `json:"score"`
+	Tags struct {
+		General     []string      `json:"general"`
+		Artist      []string      `json:"artist"`
+		Contributor []interface{} `json:"contributor"`
+		Copyright   []string      `json:"copyright"`
+		Character   []interface{} `json:"character"`
+		Species     []string      `json:"species"`
+		Invalid     []interface{} `json:"invalid"`
+		Meta        []string      `json:"meta"`
+		Lore        []interface{} `json:"lore"`
+	} `json:"tags"`
+	Rating       string   `json:"rating"`
+	FavCount     int      `json:"fav_count"`
+	Sources      []string `json:"sources"`
+	Description  string   `json:"description"`
+	CommentCount int      `json:"comment_count"`
+}
+
 func RegisterPorbCommands(a *app.App) {
 	if username != "" && password != "" {
 		a.RegisterCommand("e621", registerE621(a))
+
+		a.RegisterCommandAlias("porb", "e621")
 	} else {
 		log.Println("Not registering e621 command...")
 	}

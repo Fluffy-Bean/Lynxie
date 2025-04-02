@@ -18,10 +18,6 @@ var client = http.Client{
 	Timeout: 10 * time.Second,
 }
 
-func RegisterTinyfoxCommands(a *app.App) {
-	a.RegisterCommand("animal", registerAnimal(a))
-}
-
 var animals = []string{
 	"fox",
 	"yeen",
@@ -83,6 +79,12 @@ var animalAliases = map[string]string{
 	"coyote":       "yote",
 	"possum":       "poss",
 	"opossum":      "poss",
+}
+
+func RegisterTinyfoxCommands(a *app.App) {
+	a.RegisterCommand("animal", registerAnimal(a))
+
+	a.RegisterCommandAlias("a", "animal")
 }
 
 func registerAnimal(a *app.App) app.Callback {
