@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -21,7 +22,11 @@ var username = os.Getenv("E621_USERNAME")
 var password = os.Getenv("E621_PASSWORD")
 
 func RegisterPorbCommands(a *app.App) {
-	a.RegisterCommand("e621", registerE621(a))
+	if username != "" && password != "" {
+		a.RegisterCommand("e621", registerE621(a))
+	} else {
+		log.Println("Not registering e621 command...")
+	}
 }
 
 func registerE621(a *app.App) app.Callback {
@@ -59,7 +64,7 @@ func registerE621(a *app.App) app.Callback {
 
 		req.Header.Add("Accept", "application/json")
 		req.Header.Add("Content-Type", "application/json")
-		req.Header.Add("User-Agent", fmt.Sprintf("Lynxie/1.0 (by %s on e621)", username))
+		req.Header.Add("User-Agent", fmt.Sprintf("Lynxie/2.0 (by %s on e621)", username))
 		req.SetBasicAuth(username, password)
 
 		res, err := client.Do(req)
