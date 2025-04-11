@@ -15,9 +15,9 @@ steps:
       - mkdir -p ~/.ssh
       - echo "$SSH_KEY" > ~/.ssh/id_rsa
       - chmod 600 ~/.ssh/id_rsa
-      - ssh -o StrictHostKeyChecking=no uncertainty@192.168.0.44 "rm $COPY_TO || true"
-      - scp -o StrictHostKeyChecking=no $COPY_FROM uncertainty@192.168.0.44:$COPY_TO
-      - ssh -o StrictHostKeyChecking=no uncertainty@192.168.0.44 "doas service lynxie restart"
+      - ssh -o StrictHostKeyChecking=no uncertainty@192.168.0.45 "rm $COPY_TO || true"
+      - scp -o StrictHostKeyChecking=no $COPY_FROM uncertainty@192.168.0.45:$COPY_TO
+      - ssh -o StrictHostKeyChecking=no uncertainty@192.168.0.45 "doas service lynxie restart"
     environment:
       COPY_FROM: lynxie
       COPY_TO: /home/uncertainty/lynxie
