@@ -5,6 +5,7 @@ import (
 
 	"github.com/Fluffy-Bean/lynxie/app"
 	"github.com/Fluffy-Bean/lynxie/commands/debug"
+	"github.com/Fluffy-Bean/lynxie/commands/img"
 	"github.com/Fluffy-Bean/lynxie/commands/porb"
 	"github.com/Fluffy-Bean/lynxie/commands/tinyfox"
 	"github.com/bwmarrin/discordgo"
@@ -18,6 +19,7 @@ func main() {
 	})
 
 	debug.RegisterDebugCommands(a)
+	img.RegisterImgCommands(a)
 	tinyfox.RegisterTinyfoxCommands(a)
 	porb.RegisterPorbCommands(a)
 
