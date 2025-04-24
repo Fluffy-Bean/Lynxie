@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -18,8 +17,6 @@ import (
 var client = http.Client{
 	Timeout: 10 * time.Second,
 }
-var username = os.Getenv("E621_USERNAME")
-var password = os.Getenv("E621_PASSWORD")
 
 type post struct {
 	Id        int       `json:"id"`
@@ -57,13 +54,18 @@ type post struct {
 }
 
 func RegisterPorbCommands(a *app.App) {
-	if username != "" && password != "" {
-		a.RegisterCommand("e621", registerE621(a))
+	username, _ := a.Config.CommandExtras["e621_username"]
+	password, _ := a.Config.CommandExtras["e621_password"]
 
-		a.RegisterCommandAlias("porb", "e621")
-	} else {
+	if username == "" || password == "" {
 		log.Println("Not registering e621 command...")
+
+		return
 	}
+
+	a.RegisterCommand("e621", registerE621(a))
+
+	a.RegisterCommandAlias("porb", "e621")
 }
 
 func registerE621(a *app.App) app.Callback {
@@ -98,6 +100,9 @@ func registerE621(a *app.App) app.Callback {
 				Err: err,
 			}
 		}
+
+		username, _ := a.Config.CommandExtras["e621_username"]
+		password, _ := a.Config.CommandExtras["e621_password"]
 
 		req.Header.Add("Accept", "application/json")
 		req.Header.Add("Content-Type", "application/json")

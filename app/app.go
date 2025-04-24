@@ -15,9 +15,10 @@ import (
 type Callback func(h *Handler, args []string) Error
 
 type Config struct {
-	Prefix  string
-	Token   string
-	Intents discordgo.Intent
+	BotPrefix     string
+	BotToken      string
+	BotIntents    discordgo.Intent
+	CommandExtras map[string]string
 }
 
 type App struct {
@@ -43,7 +44,7 @@ func (a *App) RegisterCommandAlias(alias, cmd string) {
 }
 
 func (a *App) Run() {
-	dg, err := discordgo.New("Bot " + a.Config.Token)
+	dg, err := discordgo.New("Bot " + a.Config.BotToken)
 	if err != nil {
 		fmt.Println("error creating Discord session,", err)
 
@@ -51,7 +52,7 @@ func (a *App) Run() {
 	}
 
 	dg.AddHandler(a.handler)
-	dg.Identify.Intents = a.Config.Intents
+	dg.Identify.Intents = a.Config.BotIntents
 
 	err = dg.Open()
 	if err != nil {
@@ -95,7 +96,7 @@ func (a *App) handler(session *discordgo.Session, message *discordgo.MessageCrea
 	var args string
 
 	cmd = h.Message.Content
-	cmd = strings.TrimPrefix(cmd, a.Config.Prefix)
+	cmd = strings.TrimPrefix(cmd, a.Config.BotPrefix)
 	cmd, args, _ = strings.Cut(cmd, " ")
 
 	alias, ok := a.CommandAliases[cmd]

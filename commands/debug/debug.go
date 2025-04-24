@@ -5,7 +5,6 @@ import (
 	"runtime"
 	"runtime/debug"
 	"strings"
-	"time"
 
 	"github.com/Fluffy-Bean/lynxie/app"
 	"github.com/Fluffy-Bean/lynxie/utils"
@@ -21,7 +20,8 @@ func registerDebug(a *app.App) app.Callback {
 		buildTags := "-"
 		goVersion := strings.TrimPrefix(runtime.Version(), "go")
 		gcCount := runtime.MemStats{}.NumGC
-		localTime := time.Now().Local().Format("2006-01-02 15:04:05")
+		buildHash, _ := a.Config.CommandExtras["debug_build-hash"]
+		buildPipeline, _ := a.Config.CommandExtras["debug_build-pipeline"]
 		latency := h.Session.HeartbeatLatency().Milliseconds()
 
 		info, _ := debug.ReadBuildInfo()
@@ -57,8 +57,8 @@ func registerDebug(a *app.App) app.Callback {
 						Inline: false,
 					},
 					{
-						Name:   "Local Time",
-						Value:  localTime,
+						Name:   "Build Hash",
+						Value:  fmt.Sprintf("[%s](%s)", buildHash, buildPipeline),
 						Inline: false,
 					},
 					{
