@@ -61,7 +61,7 @@ func registerSaveable(a *app.App) app.Callback {
 				Title:       "Saveable",
 				Description: "Image converted to GIF :3",
 				Image: &discordgo.MessageEmbedImage{
-					URL: "attachment://image.gif",
+					URL: "attachment://saveable.gif",
 				},
 				Color: utils.ColorFromRGB(255, 255, 255),
 			},
