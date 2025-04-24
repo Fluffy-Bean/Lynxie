@@ -71,7 +71,6 @@ func RegisterPorbCommands(a *app.App) {
 func registerE621(a *app.App) app.Callback {
 	return func(h *app.Handler, args []string) app.Error {
 		var options struct {
-			Tags   string
 			Order  string
 			Rating string
 		}
@@ -80,7 +79,6 @@ func registerE621(a *app.App) app.Callback {
 
 		cmd.StringVar(&options.Order, "order", "random", "Search order")
 		cmd.StringVar(&options.Rating, "rating", "e", "Search rating")
-		cmd.StringVar(&options.Tags, "tags", "", "Search tags")
 
 		cmd.Parse(args)
 
@@ -90,7 +88,7 @@ func registerE621(a *app.App) app.Callback {
 				"https://e621.net/posts.json/?limit=1&tags=order:%s+rating:%s+%s",
 				options.Order,
 				options.Rating,
-				options.Tags,
+				strings.Join(cmd.Args(), "+"),
 			),
 			nil,
 		)

@@ -2,7 +2,6 @@ package tinyfox
 
 import (
 	"errors"
-	"flag"
 	"fmt"
 	"net/http"
 	"slices"
@@ -89,34 +88,27 @@ func RegisterTinyfoxCommands(a *app.App) {
 
 func registerAnimal(a *app.App) app.Callback {
 	return func(h *app.Handler, args []string) app.Error {
-		var options struct {
-			Kind string
-		}
-
-		cmd := flag.NewFlagSet("", flag.ContinueOnError)
-
-		cmd.StringVar(&options.Kind, "kind", "", "Animal kind to search for")
-
-		cmd.Parse(args)
-
-		if options.Kind == "" {
+		if len(args) < 1 {
 			return app.Error{
 				Msg: "Animal name is required!",
 				Err: errors.New("animal name is required"),
 			}
 		}
-		if !slices.Contains(animals, options.Kind) {
-			alias, ok := animalAliases[options.Kind]
+
+		animal := args[0]
+
+		if !slices.Contains(animals, animal) {
+			alias, ok := animalAliases[animal]
 			if !ok {
 				return app.Error{
-					Msg: fmt.Sprintf("Animal \"%s\" is invalid. The following animals are supported:\n%s", options.Kind, strings.Join(animals, ", ")),
+					Msg: fmt.Sprintf("Animal \"%s\" is invalid. The following animals are supported:\n%s", animal, strings.Join(animals, ", ")),
 					Err: errors.New("entered invalid animal name"),
 				}
 			}
-			options.Kind = alias
+			animal = alias
 		}
 
-		req, err := http.NewRequest(http.MethodGet, "https://api.tinyfox.dev/img?animal="+options.Kind, nil)
+		req, err := http.NewRequest(http.MethodGet, "https://api.tinyfox.dev/img?animal="+animal, nil)
 		if err != nil {
 			return app.Error{
 				Msg: "Failed to make request",
@@ -137,13 +129,13 @@ func registerAnimal(a *app.App) app.Callback {
 			Embed: &discordgo.MessageEmbed{
 				Title: "Animal",
 				Image: &discordgo.MessageEmbedImage{
-					URL: "attachment://image.png",
+					URL: "attachment://animal.png",
 				},
 				Color: utils.ColorFromRGB(255, 255, 255),
 			},
 			Files: []*discordgo.File{
 				{
-					Name:        "image.png",
+					Name:        "animal.png",
 					ContentType: "",
 					Reader:      res.Body,
 				},
