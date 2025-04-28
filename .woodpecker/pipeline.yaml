@@ -7,7 +7,7 @@ steps:
     image: golang:1.24-alpine3.20
     commands:
       - go mod tidy
-      - go build -ldflags="-X 'main.ConfigBuildHash=$CI_COMMIT_SHA' -X 'main.ConfigBuildPipeline=$CI_PIPELINE_URL'" -o lynxie ./cmd/lynxie/.
+      - go build -ldflags="-X 'main.ConfigBuildHash=$CI_COMMIT_SHA' -X 'main.ConfigBuildPipeline=$CI_PIPELINE_URL'" -o lynxie .
   - name: deploy
     image: alpine:latest
     commands:
