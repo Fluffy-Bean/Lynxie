@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/Fluffy-Bean/lynxie/app"
-	"github.com/Fluffy-Bean/lynxie/utils"
+	"github.com/Fluffy-Bean/lynxie/internal/color"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -180,7 +180,7 @@ func registerE621(a *app.App) app.Callback {
 						data.Posts[0].CreatedAt.Format(time.DateTime),
 					),
 				},
-				Color: utils.ColorFromRGB(255, 255, 255),
+				Color: color.RGBToDiscord(255, 255, 255),
 			},
 			Reference: h.Reference,
 		})

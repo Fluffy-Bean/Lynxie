@@ -8,7 +8,7 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/Fluffy-Bean/lynxie/utils"
+	"github.com/Fluffy-Bean/lynxie/internal/color"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -132,7 +132,7 @@ func printHelp(a *App, h *Handler) {
 		Embed: &discordgo.MessageEmbed{
 			Title:       "Help",
 			Description: strings.Join(commands, "\n"),
-			Color:       utils.ColorFromRGB(255, 255, 255),
+			Color:       color.RGBToDiscord(255, 255, 255),
 		},
 		Reference: h.Reference,
 	})
@@ -145,7 +145,7 @@ func printError(a *App, h *Handler, e Error) {
 		Embed: &discordgo.MessageEmbed{
 			Title:       "Error",
 			Description: e.Msg,
-			Color:       utils.ColorFromRGB(255, 0, 0),
+			Color:       color.RGBToDiscord(255, 0, 0),
 		},
 		Reference: h.Reference,
 	})

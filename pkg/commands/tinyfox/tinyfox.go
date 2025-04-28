@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/Fluffy-Bean/lynxie/app"
-	"github.com/Fluffy-Bean/lynxie/utils"
+	"github.com/Fluffy-Bean/lynxie/internal/color"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -131,7 +131,7 @@ func registerAnimal(a *app.App) app.Callback {
 				Image: &discordgo.MessageEmbedImage{
 					URL: "attachment://animal.png",
 				},
-				Color: utils.ColorFromRGB(255, 255, 255),
+				Color: color.RGBToDiscord(255, 255, 255),
 			},
 			Files: []*discordgo.File{
 				{

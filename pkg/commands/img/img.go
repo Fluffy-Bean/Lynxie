@@ -6,7 +6,6 @@ import (
 	_ "embed"
 	"errors"
 	"image"
-	"image/color"
 	"image/jpeg"
 	"image/png"
 	"io"
@@ -16,7 +15,7 @@ import (
 
 	"git.sr.ht/~sbinet/gg"
 	"github.com/Fluffy-Bean/lynxie/app"
-	"github.com/Fluffy-Bean/lynxie/utils"
+	"github.com/Fluffy-Bean/lynxie/internal/color"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -78,7 +77,7 @@ func registerSaveable(a *app.App) app.Callback {
 				Image: &discordgo.MessageEmbedImage{
 					URL: "attachment://saveable.gif",
 				},
-				Color: utils.ColorFromRGB(255, 255, 255),
+				Color: color.RGBToDiscord(255, 255, 255),
 			},
 			Files: []*discordgo.File{
 				{
@@ -179,10 +178,10 @@ func registerCaption(a *app.App) app.Callback {
 			}
 		}
 
-		canvas.SetColor(color.RGBA{R: 255, G: 255, B: 255, A: 255})
+		canvas.SetRGBA(255, 255, 255, 255)
 		canvas.Clear()
 
-		canvas.SetColor(color.RGBA{R: 0, G: 0, B: 0, A: 255})
+		canvas.SetRGBA(0, 0, 0, 255)
 		canvas.DrawStringWrapped(
 			strings.Join(args, " "),
 			float64(img.Bounds().Dx()/2),
@@ -213,7 +212,7 @@ func registerCaption(a *app.App) app.Callback {
 				Image: &discordgo.MessageEmbedImage{
 					URL: "attachment://caption.jpeg",
 				},
-				Color: utils.ColorFromRGB(255, 255, 255),
+				Color: color.RGBToDiscord(255, 255, 255),
 			},
 			Files: []*discordgo.File{
 				{
