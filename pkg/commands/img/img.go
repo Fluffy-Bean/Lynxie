@@ -5,6 +5,7 @@ import (
 	"bytes"
 	_ "embed"
 	"errors"
+	"fmt"
 	"image"
 	"image/jpeg"
 	"image/png"
@@ -14,6 +15,7 @@ import (
 	"time"
 
 	"git.sr.ht/~sbinet/gg"
+	"github.com/Fluffy-Bean/lynxie/_resources"
 	"github.com/Fluffy-Bean/lynxie/app"
 	"github.com/Fluffy-Bean/lynxie/internal/color"
 	"github.com/bwmarrin/discordgo"
@@ -25,9 +27,6 @@ var client = http.Client{
 	Timeout: 10 * time.Second,
 }
 
-//go:embed resources/Impact.ttf
-var resourceImpactFont []byte
-
 func RegisterImgCommands(a *app.App) {
 	a.RegisterCommand("saveable", registerSaveable(a))
 	a.RegisterCommandAlias("gif", "saveable")
@@ -38,7 +37,7 @@ func RegisterImgCommands(a *app.App) {
 
 func registerSaveable(a *app.App) app.Callback {
 	return func(h *app.Handler, args []string) app.Error {
-		fileEndpoint, err := getClosestImage(h)
+		fileEndpoint, err := findClosestImage(h)
 		if err != nil {
 			return app.Error{
 				Msg: "Could not get image",
@@ -77,7 +76,7 @@ func registerSaveable(a *app.App) app.Callback {
 				Image: &discordgo.MessageEmbedImage{
 					URL: "attachment://saveable.gif",
 				},
-				Color: color.RGBToDiscord(255, 255, 255),
+				Color: color.RGBToDiscord(1, 1, 1),
 			},
 			Files: []*discordgo.File{
 				{
@@ -95,7 +94,7 @@ func registerSaveable(a *app.App) app.Callback {
 
 func registerCaption(a *app.App) app.Callback {
 	return func(h *app.Handler, args []string) app.Error {
-		fileEndpoint, err := getClosestImage(h)
+		fileEndpoint, err := findClosestImage(h)
 		if err != nil {
 			return app.Error{
 				Msg: "Could not get image",
@@ -135,42 +134,32 @@ func registerCaption(a *app.App) app.Callback {
 			}
 		}
 
-		var img image.Image
-		switch http.DetectContentType(buff) {
-		case "image/png":
-			img, err = png.Decode(bytes.NewReader(buff))
-			if err != nil {
-				return app.Error{
-					Msg: "Failed to decode PNG",
-					Err: err,
-				}
-			}
-			break
-		case "image/jpeg":
-			img, err = jpeg.Decode(bytes.NewReader(buff))
-			if err != nil {
-				return app.Error{
-					Msg: "Failed to decode JPEG",
-					Err: err,
-				}
-			}
-			break
-		default:
+		img, err := loadImageFromBytes(buff)
+		if err != nil {
 			return app.Error{
-				Msg: "Unknown or unsupported image format",
-				Err: errors.New("Unknown or unsupported image format " + http.DetectContentType(buff)),
+				Msg: "Failed to load image",
+				Err: errors.New("Failed to load image " + err.Error()),
 			}
 		}
+		imgWidth, imgHeight := img.Bounds().Dx(), img.Bounds().Dy()
 
-		fontSize := float64(img.Bounds().Dx() / 25)
-		if fontSize < 16 {
-			fontSize = 16
-		} else if fontSize > 50 {
-			fontSize = 50
+		captionSize := float64(imgWidth / 15)
+		if captionSize < 16 {
+			captionSize = 16
+		} else if captionSize > 50 {
+			captionSize = 50
 		}
 
-		canvas := gg.NewContext(img.Bounds().Dx(), img.Bounds().Dy()+200)
-		err = canvas.LoadFontFaceFromBytes(resourceImpactFont, fontSize)
+		// 8px padding all around
+		_, captionHeight := measureText(_resources.FontRoboto, strings.Join(args, " "), captionSize, imgWidth-16)
+		captionHeight += 16
+
+		if captionHeight < 128 {
+			captionHeight = 128
+		}
+
+		canvas := gg.NewContext(imgWidth, imgHeight+captionHeight)
+		err = canvas.LoadFontFaceFromBytes(_resources.FontRoboto, captionSize)
 		if err != nil {
 			return app.Error{
 				Msg: "Failed to load font",
@@ -178,27 +167,25 @@ func registerCaption(a *app.App) app.Callback {
 			}
 		}
 
-		canvas.SetRGBA(255, 255, 255, 255)
+		canvas.SetRGBA(1, 1, 1, 1)
 		canvas.Clear()
 
-		canvas.SetRGBA(0, 0, 0, 255)
+		canvas.SetRGBA(0, 0, 0, 1)
 		canvas.DrawStringWrapped(
 			strings.Join(args, " "),
-			float64(img.Bounds().Dx()/2),
-			100,
-			0.5,
-			0.5,
-			float64(img.Bounds().Dx()),
+			float64(imgWidth/2), float64(captionHeight/2),
+			0.5, 0.5, float64(imgWidth),
 			1.5,
 			gg.AlignCenter,
 		)
 
-		canvas.DrawImage(img, 0, 200)
+		canvas.DrawImage(img, 0, captionHeight)
 
 		var export bytes.Buffer
-		err = canvas.EncodeJPG(bufio.NewWriter(&export), &jpeg.Options{
-			Quality: 100,
-		})
+		err = canvas.EncodeJPG(
+			bufio.NewWriter(&export),
+			&jpeg.Options{Quality: 100},
+		)
 		if err != nil {
 			return app.Error{
 				Msg: "Failed to encode JPEG",
@@ -212,7 +199,7 @@ func registerCaption(a *app.App) app.Callback {
 				Image: &discordgo.MessageEmbedImage{
 					URL: "attachment://caption.jpeg",
 				},
-				Color: color.RGBToDiscord(255, 255, 255),
+				Color: color.RGBToDiscord(1, 1, 1),
 			},
 			Files: []*discordgo.File{
 				{
@@ -228,7 +215,35 @@ func registerCaption(a *app.App) app.Callback {
 	}
 }
 
-func getClosestImage(h *app.Handler) (string, error) {
+func loadImageFromBytes(buff []byte) (image.Image, error) {
+	var (
+		img image.Image
+		err error
+	)
+
+	contentType := http.DetectContentType(buff)
+
+	switch contentType {
+	case "image/png":
+		img, err = png.Decode(bytes.NewReader(buff))
+		if err != nil {
+			return nil, fmt.Errorf("failed to decode png: %s", err)
+		}
+		break
+	case "image/jpeg":
+		img, err = jpeg.Decode(bytes.NewReader(buff))
+		if err != nil {
+			return nil, fmt.Errorf("failed to decode jpeg: %s", err)
+		}
+		break
+	default:
+		return nil, fmt.Errorf("unknown or unsupported format: %s", contentType)
+	}
+
+	return img, nil
+}
+
+func findClosestImage(h *app.Handler) (string, error) {
 	// Get message attachments
 	if len(h.Message.Attachments) >= 1 {
 		if h.Message.Attachments[0].Size > maxFileSize {
@@ -256,4 +271,18 @@ func getClosestImage(h *app.Handler) (string, error) {
 	}
 
 	return "", errors.New("no files exists")
+}
+
+func measureText(font []byte, text string, size float64, width int) (int, int) {
+	canvas := gg.NewContext(width, width)
+	err := canvas.LoadFontFaceFromBytes(font, size)
+	if err != nil {
+		return 0, 0
+	}
+
+	wrappedText := strings.Join(canvas.WordWrap(text, float64(width)), "\n")
+
+	lineWidth, lineHeight := canvas.MeasureMultilineString(wrappedText, 1.5)
+
+	return int(lineWidth), int(lineHeight)
 }
