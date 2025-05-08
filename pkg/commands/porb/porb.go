@@ -80,7 +80,13 @@ func registerE621(a *app.App) app.Callback {
 		cmd.StringVar(&options.Order, "order", "random", "Search order")
 		cmd.StringVar(&options.Rating, "rating", "e", "Search rating")
 
-		cmd.Parse(args)
+		err := cmd.Parse(args)
+		if err != nil {
+			return app.Error{
+				Msg: "failed parsing e621 flags",
+				Err: err,
+			}
+		}
 
 		req, err := http.NewRequest(
 			http.MethodGet,
@@ -94,7 +100,7 @@ func registerE621(a *app.App) app.Callback {
 		)
 		if err != nil {
 			return app.Error{
-				Msg: "Failed to make request",
+				Msg: "failed to make request",
 				Err: err,
 			}
 		}
@@ -119,11 +125,17 @@ func registerE621(a *app.App) app.Callback {
 		var data struct {
 			Posts []post `json:"posts"`
 		}
-		json.NewDecoder(res.Body).Decode(&data)
+		err = json.NewDecoder(res.Body).Decode(&data)
+		if err != nil {
+			return app.Error{
+				Msg: "failed decoding e621 response",
+				Err: err,
+			}
+		}
 
 		if len(data.Posts) == 0 {
 			return app.Error{
-				Msg: "No posts found",
+				Msg: "no posts found",
 				Err: fmt.Errorf("no posts found"),
 			}
 		}
@@ -142,7 +154,7 @@ func registerE621(a *app.App) app.Callback {
 			generalTags = "No tags provided."
 		}
 
-		h.Session.ChannelMessageSendComplex(h.Message.ChannelID, &discordgo.MessageSend{
+		_, err = h.Session.ChannelMessageSendComplex(h.Message.ChannelID, &discordgo.MessageSend{
 			Embed: &discordgo.MessageEmbed{
 				Title:       "E621",
 				Description: description,
@@ -184,6 +196,12 @@ func registerE621(a *app.App) app.Callback {
 			},
 			Reference: h.Reference,
 		})
+		if err != nil {
+			return app.Error{
+				Msg: "failed sending e621 message",
+				Err: err,
+			}
+		}
 
 		return app.Error{}
 	}

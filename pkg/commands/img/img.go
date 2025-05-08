@@ -69,7 +69,7 @@ func registerSaveable(a *app.App) app.Callback {
 		}
 		defer res.Body.Close()
 
-		h.Session.ChannelMessageSendComplex(h.Message.ChannelID, &discordgo.MessageSend{
+		_, err = h.Session.ChannelMessageSendComplex(h.Message.ChannelID, &discordgo.MessageSend{
 			Embed: &discordgo.MessageEmbed{
 				Title:       "Saveable",
 				Description: "Image converted to GIF :3",
@@ -87,6 +87,12 @@ func registerSaveable(a *app.App) app.Callback {
 			},
 			Reference: h.Reference,
 		})
+		if err != nil {
+			return app.Error{
+				Msg: "failed to send saveable message",
+				Err: err,
+			}
+		}
 
 		return app.Error{}
 	}
@@ -129,7 +135,7 @@ func registerCaption(a *app.App) app.Callback {
 		buff, err := io.ReadAll(res.Body)
 		if err != nil {
 			return app.Error{
-				Msg: "Failed to read image",
+				Msg: "failed to read image",
 				Err: err,
 			}
 		}
@@ -137,7 +143,7 @@ func registerCaption(a *app.App) app.Callback {
 		img, err := loadImageFromBytes(buff)
 		if err != nil {
 			return app.Error{
-				Msg: "Failed to load image",
+				Msg: "failed to load image",
 				Err: errors.New("Failed to load image " + err.Error()),
 			}
 		}
@@ -162,7 +168,7 @@ func registerCaption(a *app.App) app.Callback {
 		err = canvas.LoadFontFaceFromBytes(_resources.FontRoboto, captionSize)
 		if err != nil {
 			return app.Error{
-				Msg: "Failed to load font",
+				Msg: "failed to load font",
 				Err: err,
 			}
 		}
@@ -188,12 +194,12 @@ func registerCaption(a *app.App) app.Callback {
 		)
 		if err != nil {
 			return app.Error{
-				Msg: "Failed to encode JPEG",
+				Msg: "failed to encode JPEG",
 				Err: err,
 			}
 		}
 
-		h.Session.ChannelMessageSendComplex(h.Message.ChannelID, &discordgo.MessageSend{
+		_, err = h.Session.ChannelMessageSendComplex(h.Message.ChannelID, &discordgo.MessageSend{
 			Embed: &discordgo.MessageEmbed{
 				Title: "Caption",
 				Image: &discordgo.MessageEmbedImage{
@@ -210,6 +216,12 @@ func registerCaption(a *app.App) app.Callback {
 			},
 			Reference: h.Reference,
 		})
+		if err != nil {
+			return app.Error{
+				Msg: "failed to send caption message",
+				Err: err,
+			}
+		}
 
 		return app.Error{}
 	}

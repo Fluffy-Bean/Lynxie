@@ -114,7 +114,7 @@ func (a *App) handler(session *discordgo.Session, message *discordgo.MessageCrea
 		return
 	}
 
-	h.Session.ChannelTyping(h.Message.ChannelID)
+	_ = h.Session.ChannelTyping(h.Message.ChannelID)
 
 	err := callback(h, strings.Split(args, " "))
 	if !err.Ok() {
@@ -128,7 +128,7 @@ func printHelp(a *App, h *Handler) {
 		commands = append(commands, cmd)
 	}
 
-	h.Session.ChannelMessageSendComplex(h.Message.ChannelID, &discordgo.MessageSend{
+	_, _ = h.Session.ChannelMessageSendComplex(h.Message.ChannelID, &discordgo.MessageSend{
 		Embed: &discordgo.MessageEmbed{
 			Title:       "Help",
 			Description: strings.Join(commands, "\n"),
@@ -141,7 +141,7 @@ func printHelp(a *App, h *Handler) {
 func printError(a *App, h *Handler, e Error) {
 	log.Println(e.Err)
 
-	h.Session.ChannelMessageSendComplex(h.Message.ChannelID, &discordgo.MessageSend{
+	_, _ = h.Session.ChannelMessageSendComplex(h.Message.ChannelID, &discordgo.MessageSend{
 		Embed: &discordgo.MessageEmbed{
 			Title:       "Error",
 			Description: e.Msg,

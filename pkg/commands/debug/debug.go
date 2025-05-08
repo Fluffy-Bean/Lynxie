@@ -32,7 +32,7 @@ func registerDebug(a *app.App) app.Callback {
 			}
 		}
 
-		h.Session.ChannelMessageSendComplex(h.Message.ChannelID, &discordgo.MessageSend{
+		_, err := h.Session.ChannelMessageSendComplex(h.Message.ChannelID, &discordgo.MessageSend{
 			Embed: &discordgo.MessageEmbed{
 				Title: "Lynxie",
 				Fields: []*discordgo.MessageEmbedField{
@@ -71,6 +71,12 @@ func registerDebug(a *app.App) app.Callback {
 			},
 			Reference: h.Reference,
 		})
+		if err != nil {
+			return app.Error{
+				Msg: "failed to send debug message",
+				Err: err,
+			}
+		}
 
 		return app.Error{}
 	}

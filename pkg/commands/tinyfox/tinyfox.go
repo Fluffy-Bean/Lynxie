@@ -125,7 +125,7 @@ func registerAnimal(a *app.App) app.Callback {
 		}
 		defer res.Body.Close()
 
-		h.Session.ChannelMessageSendComplex(h.Message.ChannelID, &discordgo.MessageSend{
+		_, err = h.Session.ChannelMessageSendComplex(h.Message.ChannelID, &discordgo.MessageSend{
 			Embed: &discordgo.MessageEmbed{
 				Title: "Animal",
 				Image: &discordgo.MessageEmbedImage{
@@ -142,6 +142,12 @@ func registerAnimal(a *app.App) app.Callback {
 			},
 			Reference: h.Reference,
 		})
+		if err != nil {
+			return app.Error{
+				Msg: "failed to send tinyfox message",
+				Err: err,
+			}
+		}
 
 		return app.Error{}
 	}
