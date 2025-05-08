@@ -85,6 +85,15 @@ func (a *App) handler(session *discordgo.Session, message *discordgo.MessageCrea
 		},
 	}
 
+	defer func() {
+		if r := recover(); r != nil {
+			printError(a, h, Error{
+				Msg: "panic!",
+				Err: fmt.Errorf("%v", r),
+			})
+		}
+	}()
+
 	if h.Message.Author.ID == h.Session.State.User.ID {
 		return
 	}
