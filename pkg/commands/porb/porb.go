@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 	"time"
 
-	"github.com/Fluffy-Bean/lynxie/app"
 	"github.com/Fluffy-Bean/lynxie/internal/color"
+	"github.com/Fluffy-Bean/lynxie/internal/errors"
+	"github.com/Fluffy-Bean/lynxie/internal/handler"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -53,23 +53,14 @@ type post struct {
 	CommentCount int      `json:"comment_count"`
 }
 
-func RegisterPorbCommands(a *app.App) {
-	username, _ := a.Config.CommandExtras["e621_username"]
-	password, _ := a.Config.CommandExtras["e621_password"]
+func RegisterPorbCommands(bot *handler.Bot) {
+	bot.RegisterCommand("e621", registerE621(bot))
 
-	if username == "" || password == "" {
-		log.Println("Not registering e621 command...")
-
-		return
-	}
-
-	a.RegisterCommand("e621", registerE621(a))
-
-	a.RegisterCommandAlias("porb", "e621")
+	bot.RegisterCommandAlias("porb", "e621")
 }
 
-func registerE621(a *app.App) app.Callback {
-	return func(h *app.Handler, args []string) app.Error {
+func registerE621(bot *handler.Bot) handler.Callback {
+	return func(h *handler.Handler, args []string) errors.Error {
 		var options struct {
 			Order  string
 			Rating string
@@ -82,40 +73,33 @@ func registerE621(a *app.App) app.Callback {
 
 		err := cmd.Parse(args)
 		if err != nil {
-			return app.Error{
+			return errors.Error{
 				Msg: "failed parsing e621 flags",
 				Err: err,
 			}
 		}
 
-		req, err := http.NewRequest(
-			http.MethodGet,
-			fmt.Sprintf(
-				"https://e621.net/posts.json/?limit=1&tags=order:%s+rating:%s+%s",
-				options.Order,
-				options.Rating,
-				strings.Join(cmd.Args(), "+"),
-			),
-			nil,
+		url := fmt.Sprintf(
+			"https://e621.net/posts.json/?limit=1&tags=order:%s+rating:%s+%s",
+			options.Order,
+			options.Rating,
+			strings.Join(cmd.Args(), "+"),
 		)
+
+		req, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
-			return app.Error{
+			return errors.Error{
 				Msg: "failed to make request",
 				Err: err,
 			}
 		}
 
-		username, _ := a.Config.CommandExtras["e621_username"]
-		password, _ := a.Config.CommandExtras["e621_password"]
-
 		req.Header.Add("Accept", "application/json")
 		req.Header.Add("Content-Type", "application/json")
-		req.Header.Add("User-Agent", fmt.Sprintf("Lynxie/2.0 (by %s on e621)", username))
-		req.SetBasicAuth(username, password)
 
 		res, err := client.Do(req)
 		if err != nil {
-			return app.Error{
+			return errors.Error{
 				Msg: "Failed to do request",
 				Err: err,
 			}
@@ -127,14 +111,14 @@ func registerE621(a *app.App) app.Callback {
 		}
 		err = json.NewDecoder(res.Body).Decode(&data)
 		if err != nil {
-			return app.Error{
+			return errors.Error{
 				Msg: "failed decoding e621 response",
 				Err: err,
 			}
 		}
 
 		if len(data.Posts) == 0 {
-			return app.Error{
+			return errors.Error{
 				Msg: "no posts found",
 				Err: fmt.Errorf("no posts found"),
 			}
@@ -145,13 +129,6 @@ func registerE621(a *app.App) app.Callback {
 			description = data.Posts[0].Description
 		} else {
 			description = "No description provided."
-		}
-
-		var generalTags string
-		if len(data.Posts[0].Tags.General) > 0 {
-			generalTags = strings.Join(data.Posts[0].Tags.General[:20], ", ")
-		} else {
-			generalTags = "No tags provided."
 		}
 
 		_, err = h.Session.ChannelMessageSendComplex(h.Message.ChannelID, &discordgo.MessageSend{
@@ -176,33 +153,24 @@ func registerE621(a *app.App) app.Callback {
 						Value:  strings.Join(data.Posts[0].Sources, ", "),
 						Inline: false,
 					},
-					{
-						Name:   "Tag(s)",
-						Value:  generalTags,
-						Inline: false,
-					},
 				},
 				Image: &discordgo.MessageEmbedImage{
 					URL: data.Posts[0].File.Url,
 				},
 				Footer: &discordgo.MessageEmbedFooter{
-					Text: fmt.Sprintf(
-						"ID: %d | Created: %s",
-						data.Posts[0].Id,
-						data.Posts[0].CreatedAt.Format(time.DateTime),
-					),
+					Text: fmt.Sprintf("ID: %d | Created: %s", data.Posts[0].Id, data.Posts[0].CreatedAt.Format(time.DateTime)),
 				},
 				Color: color.RGBToDiscord(255, 255, 255),
 			},
 			Reference: h.Reference,
 		})
 		if err != nil {
-			return app.Error{
+			return errors.Error{
 				Msg: "failed sending e621 message",
 				Err: err,
 			}
 		}
 
-		return app.Error{}
+		return errors.Error{}
 	}
 }

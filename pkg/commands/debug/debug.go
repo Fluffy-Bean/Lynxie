@@ -6,22 +6,24 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"github.com/Fluffy-Bean/lynxie/app"
+	"github.com/Fluffy-Bean/lynxie/_resources"
 	"github.com/Fluffy-Bean/lynxie/internal/color"
+	"github.com/Fluffy-Bean/lynxie/internal/errors"
+	"github.com/Fluffy-Bean/lynxie/internal/handler"
 	"github.com/bwmarrin/discordgo"
 )
 
-func RegisterDebugCommands(a *app.App) {
-	a.RegisterCommand("debug", registerDebug(a))
+func RegisterDebugCommands(bot *handler.Bot) {
+	bot.RegisterCommand("debug", registerDebug(bot))
 }
 
-func registerDebug(a *app.App) app.Callback {
-	return func(h *app.Handler, args []string) app.Error {
+func registerDebug(bot *handler.Bot) handler.Callback {
+	return func(h *handler.Handler, args []string) errors.Error {
 		buildTags := "-"
 		goVersion := strings.TrimPrefix(runtime.Version(), "go")
 		gcCount := runtime.MemStats{}.NumGC
-		buildHash, _ := a.Config.CommandExtras["debug_build-hash"]
-		buildPipeline, _ := a.Config.CommandExtras["debug_build-pipeline"]
+		buildHash := _resources.BuildHash
+		buildPipeline := _resources.BuildPipelineLink
 		latency := h.Session.HeartbeatLatency().Milliseconds()
 
 		info, _ := debug.ReadBuildInfo()
@@ -72,12 +74,12 @@ func registerDebug(a *app.App) app.Callback {
 			Reference: h.Reference,
 		})
 		if err != nil {
-			return app.Error{
+			return errors.Error{
 				Msg: "failed to send debug message",
 				Err: err,
 			}
 		}
 
-		return app.Error{}
+		return errors.Error{}
 	}
 }

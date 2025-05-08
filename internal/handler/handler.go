@@ -1,67 +1,65 @@
-package app
+package handler
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
 
 	"github.com/Fluffy-Bean/lynxie/internal/color"
+	"github.com/Fluffy-Bean/lynxie/internal/errors"
 	"github.com/bwmarrin/discordgo"
 )
 
-type Callback func(h *Handler, args []string) Error
+type Callback func(h *Handler, args []string) errors.Error
 
-type Config struct {
-	BotPrefix     string
-	BotToken      string
-	BotIntents    discordgo.Intent
-	CommandExtras map[string]string
+type Bot struct {
+	Prefix   string
+	token    string
+	intents  discordgo.Intent
+	commands map[string]Callback
+	aliases  map[string]string
 }
 
-type App struct {
-	Config         Config
-	Commands       map[string]Callback
-	CommandAliases map[string]string
-}
-
-func NewApp(config Config) *App {
-	return &App{
-		Config:         config,
-		Commands:       make(map[string]Callback),
-		CommandAliases: make(map[string]string),
+func NewBot(prefix, token string, intents discordgo.Intent) *Bot {
+	return &Bot{
+		Prefix:   prefix,
+		token:    token,
+		intents:  intents,
+		commands: make(map[string]Callback),
+		aliases:  make(map[string]string),
 	}
 }
 
-func (a *App) RegisterCommand(cmd string, f Callback) {
-	a.Commands[cmd] = f
+func (b *Bot) RegisterCommand(cmd string, f Callback) {
+	b.commands[cmd] = f
 }
 
-func (a *App) RegisterCommandAlias(alias, cmd string) {
-	a.CommandAliases[alias] = cmd
+func (b *Bot) RegisterCommandAlias(alias, cmd string) {
+	b.aliases[alias] = cmd
 }
 
-func (a *App) Run() {
-	dg, err := discordgo.New("Bot " + a.Config.BotToken)
+func (b *Bot) Run() {
+	dg, err := discordgo.New("Bot " + b.token)
 	if err != nil {
-		fmt.Println("error creating Discord session,", err)
+		fmt.Println("Could not create Discord session:", err)
 
 		return
 	}
 
-	dg.AddHandler(a.handler)
-	dg.Identify.Intents = a.Config.BotIntents
+	dg.AddHandler(b.handler)
+	dg.Identify.Intents = b.intents
 
 	err = dg.Open()
 	if err != nil {
-		fmt.Println("error opening connection,", err)
+		fmt.Println("Could not connect:", err)
 
 		return
 	}
 
 	fmt.Println("Bot is now running. Press CTRL-C to exit.")
+
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	<-sc
@@ -75,7 +73,7 @@ type Handler struct {
 	Reference *discordgo.MessageReference
 }
 
-func (a *App) handler(session *discordgo.Session, message *discordgo.MessageCreate) {
+func (b *Bot) handler(session *discordgo.Session, message *discordgo.MessageCreate) {
 	h := &Handler{
 		Session: session,
 		Message: message,
@@ -87,8 +85,8 @@ func (a *App) handler(session *discordgo.Session, message *discordgo.MessageCrea
 
 	defer func() {
 		if r := recover(); r != nil {
-			printError(a, h, Error{
-				Msg: "But the bot simply refused",
+			printError(b, h, errors.Error{
+				Msg: "But the b simply refused",
 				Err: fmt.Errorf("%v", r),
 			})
 		}
@@ -105,19 +103,19 @@ func (a *App) handler(session *discordgo.Session, message *discordgo.MessageCrea
 	var args string
 
 	cmd = h.Message.Content
-	cmd = strings.TrimPrefix(cmd, a.Config.BotPrefix)
+	cmd = strings.TrimPrefix(cmd, b.Prefix)
 	cmd, args, _ = strings.Cut(cmd, " ")
 
-	alias, ok := a.CommandAliases[cmd]
+	alias, ok := b.aliases[cmd]
 	if ok {
 		cmd = alias
 	}
 
-	callback, ok := a.Commands[cmd]
+	callback, ok := b.commands[cmd]
 	if !ok {
 		// Falling back to default help command
 		if cmd == "help" {
-			printHelp(a, h)
+			printHelp(b, h)
 		}
 
 		return
@@ -127,13 +125,14 @@ func (a *App) handler(session *discordgo.Session, message *discordgo.MessageCrea
 
 	err := callback(h, strings.Split(args, " "))
 	if !err.Ok() {
-		printError(a, h, err)
+		printError(b, h, err)
 	}
 }
 
-func printHelp(a *App, h *Handler) {
+func printHelp(bot *Bot, h *Handler) {
 	var commands []string
-	for cmd := range a.Commands {
+
+	for cmd := range bot.commands {
 		commands = append(commands, cmd)
 	}
 
@@ -147,8 +146,8 @@ func printHelp(a *App, h *Handler) {
 	})
 }
 
-func printError(a *App, h *Handler, e Error) {
-	log.Println(e.Err)
+func printError(bot *Bot, h *Handler, e errors.Error) {
+	fmt.Println(e.Err)
 
 	_, _ = h.Session.ChannelMessageSendComplex(h.Message.ChannelID, &discordgo.MessageSend{
 		Embed: &discordgo.MessageEmbed{

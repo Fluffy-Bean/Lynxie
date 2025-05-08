@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	_ "embed"
-	"errors"
 	"fmt"
 	"image"
 	"image/jpeg"
@@ -16,8 +15,9 @@ import (
 
 	"git.sr.ht/~sbinet/gg"
 	"github.com/Fluffy-Bean/lynxie/_resources"
-	"github.com/Fluffy-Bean/lynxie/app"
 	"github.com/Fluffy-Bean/lynxie/internal/color"
+	"github.com/Fluffy-Bean/lynxie/internal/errors"
+	"github.com/Fluffy-Bean/lynxie/internal/handler"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -27,19 +27,19 @@ var client = http.Client{
 	Timeout: 10 * time.Second,
 }
 
-func RegisterImgCommands(a *app.App) {
-	a.RegisterCommand("saveable", registerSaveable(a))
-	a.RegisterCommandAlias("gif", "saveable")
+func RegisterImgCommands(bot *handler.Bot) {
+	bot.RegisterCommand("saveable", registerSaveable(bot))
+	bot.RegisterCommandAlias("gif", "saveable")
 
-	a.RegisterCommand("caption", registerCaption(a))
-	a.RegisterCommandAlias("c", "caption")
+	bot.RegisterCommand("caption", registerCaption(bot))
+	bot.RegisterCommandAlias("c", "caption")
 }
 
-func registerSaveable(a *app.App) app.Callback {
-	return func(h *app.Handler, args []string) app.Error {
+func registerSaveable(bot *handler.Bot) handler.Callback {
+	return func(h *handler.Handler, args []string) errors.Error {
 		fileEndpoint, err := findClosestImage(h)
 		if err != nil {
-			return app.Error{
+			return errors.Error{
 				Msg: "Could not get image",
 				Err: err,
 			}
@@ -47,23 +47,23 @@ func registerSaveable(a *app.App) app.Callback {
 
 		req, err := http.NewRequest(http.MethodGet, fileEndpoint, nil)
 		if err != nil {
-			return app.Error{
+			return errors.Error{
 				Msg: "",
 				Err: err,
 			}
 		}
 
 		if req.ContentLength > maxFileSize {
-			return app.Error{
+			return errors.Error{
 				Msg: "Could not get image",
-				Err: errors.New("requested file is too big"),
+				Err: fmt.Errorf("requested file is too big"),
 			}
 		}
 
 		res, err := client.Do(req)
 		if err != nil {
-			return app.Error{
-				Msg: "",
+			return errors.Error{
+				Msg: "failed to fetch image",
 				Err: err,
 			}
 		}
@@ -88,21 +88,21 @@ func registerSaveable(a *app.App) app.Callback {
 			Reference: h.Reference,
 		})
 		if err != nil {
-			return app.Error{
+			return errors.Error{
 				Msg: "failed to send saveable message",
 				Err: err,
 			}
 		}
 
-		return app.Error{}
+		return errors.Error{}
 	}
 }
 
-func registerCaption(a *app.App) app.Callback {
-	return func(h *app.Handler, args []string) app.Error {
+func registerCaption(bot *handler.Bot) handler.Callback {
+	return func(h *handler.Handler, args []string) errors.Error {
 		fileEndpoint, err := findClosestImage(h)
 		if err != nil {
-			return app.Error{
+			return errors.Error{
 				Msg: "Could not get image",
 				Err: err,
 			}
@@ -110,23 +110,23 @@ func registerCaption(a *app.App) app.Callback {
 
 		req, err := http.NewRequest(http.MethodGet, fileEndpoint, nil)
 		if err != nil {
-			return app.Error{
-				Msg: "",
+			return errors.Error{
+				Msg: "failed to fetch image",
 				Err: err,
 			}
 		}
 
 		if req.ContentLength > maxFileSize {
-			return app.Error{
+			return errors.Error{
 				Msg: "Could not get image",
-				Err: errors.New("requested file is too big"),
+				Err: fmt.Errorf("requested file is too big"),
 			}
 		}
 
 		res, err := client.Do(req)
 		if err != nil {
-			return app.Error{
-				Msg: "",
+			return errors.Error{
+				Msg: "failed to fetch image",
 				Err: err,
 			}
 		}
@@ -134,7 +134,7 @@ func registerCaption(a *app.App) app.Callback {
 
 		buff, err := io.ReadAll(res.Body)
 		if err != nil {
-			return app.Error{
+			return errors.Error{
 				Msg: "failed to read image",
 				Err: err,
 			}
@@ -142,9 +142,9 @@ func registerCaption(a *app.App) app.Callback {
 
 		img, err := loadImageFromBytes(buff)
 		if err != nil {
-			return app.Error{
+			return errors.Error{
 				Msg: "failed to load image",
-				Err: errors.New("Failed to load image " + err.Error()),
+				Err: fmt.Errorf("Failed to load image " + err.Error()),
 			}
 		}
 		imgWidth, imgHeight := img.Bounds().Dx(), img.Bounds().Dy()
@@ -167,7 +167,7 @@ func registerCaption(a *app.App) app.Callback {
 		canvas := gg.NewContext(imgWidth, imgHeight+captionHeight)
 		err = canvas.LoadFontFaceFromBytes(_resources.FontRoboto, captionSize)
 		if err != nil {
-			return app.Error{
+			return errors.Error{
 				Msg: "failed to load font",
 				Err: err,
 			}
@@ -193,7 +193,7 @@ func registerCaption(a *app.App) app.Callback {
 			&jpeg.Options{Quality: 100},
 		)
 		if err != nil {
-			return app.Error{
+			return errors.Error{
 				Msg: "failed to encode JPEG",
 				Err: err,
 			}
@@ -217,13 +217,13 @@ func registerCaption(a *app.App) app.Callback {
 			Reference: h.Reference,
 		})
 		if err != nil {
-			return app.Error{
+			return errors.Error{
 				Msg: "failed to send caption message",
 				Err: err,
 			}
 		}
 
-		return app.Error{}
+		return errors.Error{}
 	}
 }
 
@@ -255,11 +255,11 @@ func loadImageFromBytes(buff []byte) (image.Image, error) {
 	return img, nil
 }
 
-func findClosestImage(h *app.Handler) (string, error) {
+func findClosestImage(h *handler.Handler) (string, error) {
 	// Get message attachments
 	if len(h.Message.Attachments) >= 1 {
 		if h.Message.Attachments[0].Size > maxFileSize {
-			return "", errors.New("file size is too big")
+			return "", fmt.Errorf("file size is too big")
 		}
 
 		return h.Message.Attachments[0].ProxyURL, nil
@@ -269,7 +269,7 @@ func findClosestImage(h *app.Handler) (string, error) {
 	if h.Message.ReferencedMessage != nil {
 		if len(h.Message.ReferencedMessage.Attachments) >= 1 {
 			if h.Message.ReferencedMessage.Attachments[0].Size > maxFileSize {
-				return "", errors.New("file size is too big")
+				return "", fmt.Errorf("file size is too big")
 			}
 
 			return h.Message.ReferencedMessage.Attachments[0].ProxyURL, nil
@@ -282,7 +282,7 @@ func findClosestImage(h *app.Handler) (string, error) {
 		}
 	}
 
-	return "", errors.New("no files exists")
+	return "", fmt.Errorf("no files exists")
 }
 
 func measureText(font []byte, text string, size float64, width int) (int, int) {

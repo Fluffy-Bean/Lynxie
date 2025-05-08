@@ -1,15 +1,15 @@
 package tinyfox
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"slices"
 	"strings"
 	"time"
 
-	"github.com/Fluffy-Bean/lynxie/app"
 	"github.com/Fluffy-Bean/lynxie/internal/color"
+	"github.com/Fluffy-Bean/lynxie/internal/errors"
+	"github.com/Fluffy-Bean/lynxie/internal/handler"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -80,18 +80,18 @@ var animalAliases = map[string]string{
 	"opossum":      "poss",
 }
 
-func RegisterTinyfoxCommands(a *app.App) {
-	a.RegisterCommand("animal", registerAnimal(a))
+func RegisterTinyfoxCommands(bot *handler.Bot) {
+	bot.RegisterCommand("animal", registerAnimal(bot))
 
-	a.RegisterCommandAlias("a", "animal")
+	bot.RegisterCommandAlias("bot", "animal")
 }
 
-func registerAnimal(a *app.App) app.Callback {
-	return func(h *app.Handler, args []string) app.Error {
+func registerAnimal(bot *handler.Bot) handler.Callback {
+	return func(h *handler.Handler, args []string) errors.Error {
 		if len(args) < 1 {
-			return app.Error{
+			return errors.Error{
 				Msg: "Animal name is required!",
-				Err: errors.New("animal name is required"),
+				Err: fmt.Errorf("animal name is required"),
 			}
 		}
 
@@ -100,9 +100,9 @@ func registerAnimal(a *app.App) app.Callback {
 		if !slices.Contains(animals, animal) {
 			alias, ok := animalAliases[animal]
 			if !ok {
-				return app.Error{
+				return errors.Error{
 					Msg: fmt.Sprintf("Animal \"%s\" is invalid. The following animals are supported:\n%s", animal, strings.Join(animals, ", ")),
-					Err: errors.New("entered invalid animal name"),
+					Err: fmt.Errorf("entered invalid animal name"),
 				}
 			}
 			animal = alias
@@ -110,7 +110,7 @@ func registerAnimal(a *app.App) app.Callback {
 
 		req, err := http.NewRequest(http.MethodGet, "https://api.tinyfox.dev/img?animal="+animal, nil)
 		if err != nil {
-			return app.Error{
+			return errors.Error{
 				Msg: "Failed to make request",
 				Err: err,
 			}
@@ -118,7 +118,7 @@ func registerAnimal(a *app.App) app.Callback {
 
 		res, err := client.Do(req)
 		if err != nil {
-			return app.Error{
+			return errors.Error{
 				Msg: "Failed to do request",
 				Err: err,
 			}
@@ -143,12 +143,12 @@ func registerAnimal(a *app.App) app.Callback {
 			Reference: h.Reference,
 		})
 		if err != nil {
-			return app.Error{
+			return errors.Error{
 				Msg: "failed to send tinyfox message",
 				Err: err,
 			}
 		}
 
-		return app.Error{}
+		return errors.Error{}
 	}
 }
