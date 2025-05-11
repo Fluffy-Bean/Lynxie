@@ -76,7 +76,7 @@ func registerSaveable(bot *handler.Bot) handler.Callback {
 				Image: &discordgo.MessageEmbedImage{
 					URL: "attachment://saveable.gif",
 				},
-				Color: color.RGBToDiscord(1, 1, 1),
+				Color: color.RGBToDiscord(255, 255, 255),
 			},
 			Files: []*discordgo.File{
 				{
@@ -205,7 +205,7 @@ func registerCaption(bot *handler.Bot) handler.Callback {
 				Image: &discordgo.MessageEmbedImage{
 					URL: "attachment://caption.jpeg",
 				},
-				Color: color.RGBToDiscord(1, 1, 1),
+				Color: color.RGBToDiscord(255, 255, 255),
 			},
 			Files: []*discordgo.File{
 				{

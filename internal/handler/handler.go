@@ -132,8 +132,19 @@ func (b *Bot) handler(session *discordgo.Session, message *discordgo.MessageCrea
 func printHelp(bot *Bot, h *Handler) {
 	var commands []string
 
-	for cmd := range bot.commands {
-		commands = append(commands, cmd)
+	for command := range bot.commands {
+		var found []string
+		for a, c := range bot.aliases {
+			if c == command {
+				found = append(found, a)
+			}
+		}
+
+		if len(found) > 0 {
+			commands = append(commands, fmt.Sprintf("%s (%s)", command, strings.Join(found, ", ")))
+		} else {
+			commands = append(commands, command)
+		}
 	}
 
 	_, _ = h.Session.ChannelMessageSendComplex(h.Message.ChannelID, &discordgo.MessageSend{
@@ -141,6 +152,9 @@ func printHelp(bot *Bot, h *Handler) {
 			Title:       "Help",
 			Description: strings.Join(commands, "\n"),
 			Color:       color.RGBToDiscord(255, 255, 255),
+			Footer: &discordgo.MessageEmbedFooter{
+				Text: "command (aliases...)",
+			},
 		},
 		Reference: h.Reference,
 	})
