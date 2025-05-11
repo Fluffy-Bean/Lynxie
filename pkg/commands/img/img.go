@@ -256,7 +256,6 @@ func loadImageFromBytes(buff []byte) (image.Image, error) {
 }
 
 func findClosestImage(h *handler.Handler) (string, error) {
-	// Get message attachments
 	if len(h.Message.Attachments) >= 1 {
 		if h.Message.Attachments[0].Size > maxFileSize {
 			return "", fmt.Errorf("file size is too big")
@@ -265,20 +264,37 @@ func findClosestImage(h *handler.Handler) (string, error) {
 		return h.Message.Attachments[0].ProxyURL, nil
 	}
 
-	// If no attachments exist... see if the message is replying to someone
 	if h.Message.ReferencedMessage != nil {
-		if len(h.Message.ReferencedMessage.Attachments) >= 1 {
-			if h.Message.ReferencedMessage.Attachments[0].Size > maxFileSize {
+		message := h.Message.ReferencedMessage
+
+		if len(message.Attachments) >= 1 {
+			if message.Attachments[0].Size > maxFileSize {
 				return "", fmt.Errorf("file size is too big")
 			}
 
-			return h.Message.ReferencedMessage.Attachments[0].ProxyURL, nil
+			return message.Attachments[0].ProxyURL, nil
 		}
 
-		// Maybe replying to an embed...?
-		if len(h.Message.ReferencedMessage.Embeds) >= 1 {
-			//... no file size is provided
-			return h.Message.ReferencedMessage.Embeds[0].Image.ProxyURL, nil
+		if len(message.Embeds) >= 1 && message.Embeds[0].Image != nil {
+			return message.Embeds[0].Image.ProxyURL, nil
+		}
+	}
+
+	history, err := h.Session.ChannelMessages(h.Message.ChannelID, 10, h.Message.ID, "", "")
+	if err != nil {
+		return "", err
+	}
+	for _, message := range history {
+		if len(message.Attachments) >= 1 {
+			if message.Attachments[0].Size > maxFileSize {
+				return "", fmt.Errorf("file size is too big")
+			}
+
+			return message.Attachments[0].ProxyURL, nil
+		}
+
+		if len(message.Embeds) >= 1 && message.Embeds[0].Image != nil {
+			return message.Embeds[0].Image.ProxyURL, nil
 		}
 	}
 
