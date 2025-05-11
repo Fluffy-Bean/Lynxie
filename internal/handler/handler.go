@@ -86,7 +86,7 @@ func (b *Bot) handler(session *discordgo.Session, message *discordgo.MessageCrea
 	defer func() {
 		if r := recover(); r != nil {
 			printError(b, h, errors.Error{
-				Msg: "But the b simply refused",
+				Msg: "But the bot simply refused",
 				Err: fmt.Errorf("%v", r),
 			})
 		}
