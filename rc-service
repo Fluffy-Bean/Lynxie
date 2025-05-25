@@ -18,8 +18,6 @@ depend() {
 start() {
         ebegin "Starting ${APP_NAME}"
 
-        export E621_USERNAME=""
-        export E621_PASSWORD=""
         export TOKEN=""
 
         start-stop-daemon --start --user "$LYNXIE_USER" \
