@@ -83,7 +83,7 @@ var animalAliases = map[string]string{
 func RegisterTinyfoxCommands(bot *handler.Bot) {
 	bot.RegisterCommand("animal", registerAnimal(bot))
 
-	bot.RegisterCommandAlias("bot", "animal")
+	bot.RegisterCommandAlias("a", "animal")
 }
 
 func registerAnimal(bot *handler.Bot) handler.Callback {
