@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	bot := handler.NewBot(">", os.Getenv("TOKEN"), discordgo.IntentsGuildMessages)
+	bot := handler.NewBot("?", os.Getenv("TOKEN"), discordgo.IntentsGuildMessages)
 
 	debug.RegisterDebugCommands(bot)
 	img.RegisterImgCommands(bot)
