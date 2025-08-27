@@ -8,9 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Fluffy-Bean/lynxie/internal/bot"
 	"github.com/Fluffy-Bean/lynxie/internal/color"
-	"github.com/Fluffy-Bean/lynxie/internal/errors"
-	"github.com/Fluffy-Bean/lynxie/internal/handler"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -53,14 +52,13 @@ type post struct {
 	CommentCount int      `json:"comment_count"`
 }
 
-func RegisterPorbCommands(bot *handler.Bot) {
-	bot.RegisterCommand("e621", registerE621(bot))
-
-	bot.RegisterCommandAlias("porb", "e621")
+func RegisterPorbCommands(h *bot.Handler) {
+	_ = h.RegisterCommand("porb", cmdPorb(h))
+	_ = h.RegisterCommandAlias("e621", "porb")
 }
 
-func registerE621(bot *handler.Bot) handler.Callback {
-	return func(h *handler.Handler, args []string) errors.Error {
+func cmdPorb(h *bot.Handler) bot.Command {
+	return func(h *bot.Handler, c bot.CommandContext) error {
 		var options struct {
 			Order  string
 			Rating string
@@ -71,12 +69,9 @@ func registerE621(bot *handler.Bot) handler.Callback {
 		cmd.StringVar(&options.Order, "order", "random", "Search order")
 		cmd.StringVar(&options.Rating, "rating", "e", "Search rating")
 
-		err := cmd.Parse(args)
+		err := cmd.Parse(h.ParseArgs(c))
 		if err != nil {
-			return errors.Error{
-				Msg: "failed parsing e621 flags",
-				Err: err,
-			}
+			return fmt.Errorf("parse flags: %w", err)
 		}
 
 		url := fmt.Sprintf(
@@ -88,10 +83,7 @@ func registerE621(bot *handler.Bot) handler.Callback {
 
 		req, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
-			return errors.Error{
-				Msg: "failed to make request",
-				Err: err,
-			}
+			return fmt.Errorf("create request: %w", err)
 		}
 
 		req.Header.Add("Accept", "application/json")
@@ -99,10 +91,7 @@ func registerE621(bot *handler.Bot) handler.Callback {
 
 		res, err := client.Do(req)
 		if err != nil {
-			return errors.Error{
-				Msg: "Failed to do request",
-				Err: err,
-			}
+			return fmt.Errorf("do request: %w", err)
 		}
 		defer res.Body.Close()
 
@@ -111,17 +100,11 @@ func registerE621(bot *handler.Bot) handler.Callback {
 		}
 		err = json.NewDecoder(res.Body).Decode(&data)
 		if err != nil {
-			return errors.Error{
-				Msg: "failed decoding e621 response",
-				Err: err,
-			}
+			return fmt.Errorf("decode response: %w", err)
 		}
 
 		if len(data.Posts) == 0 {
-			return errors.Error{
-				Msg: "no posts found",
-				Err: fmt.Errorf("no posts found"),
-			}
+			return fmt.Errorf("no posts found")
 		}
 
 		var description string
@@ -131,7 +114,7 @@ func registerE621(bot *handler.Bot) handler.Callback {
 			description = "No description provided."
 		}
 
-		_, err = h.Session.ChannelMessageSendComplex(h.Message.ChannelID, &discordgo.MessageSend{
+		_, err = c.Session.ChannelMessageSendComplex(c.Message.ChannelID, &discordgo.MessageSend{
 			Embed: &discordgo.MessageEmbed{
 				Title:       "E621",
 				Description: description,
@@ -162,15 +145,12 @@ func registerE621(bot *handler.Bot) handler.Callback {
 				},
 				Color: color.RGBToDiscord(255, 255, 255),
 			},
-			Reference: h.Reference,
+			Reference: c.Message.Reference(),
 		})
 		if err != nil {
-			return errors.Error{
-				Msg: "failed sending e621 message",
-				Err: err,
-			}
+			return fmt.Errorf("send e621 response: %w", err)
 		}
 
-		return errors.Error{}
+		return nil
 	}
 }
