@@ -24,7 +24,12 @@ func main() {
 	tinyfox.RegisterTinyfoxCommands(h)
 	porb.RegisterPorbCommands(h)
 
-	log.Fatal(h.Run(os.Getenv("TOKEN"), discordgo.IntentsGuildMessages))
+	databasePath := "_data/storage_prod.db"
+	if os.Getenv("IS_DEV") != "" {
+		databasePath = "_data/storage_dev.db"
+	}
+
+	log.Fatal(h.Run(databasePath, os.Getenv("TOKEN"), discordgo.IntentsGuildMessages))
 }
 
 func handleHelp(h *bot.Handler, c bot.CommandContext) {
