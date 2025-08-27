@@ -6,13 +6,14 @@ import (
 	"os"
 	"strings"
 
+	"github.com/bwmarrin/discordgo"
+
 	"github.com/Fluffy-Bean/lynxie/internal/bot"
 	"github.com/Fluffy-Bean/lynxie/internal/color"
 	"github.com/Fluffy-Bean/lynxie/internal/commands/debug"
 	"github.com/Fluffy-Bean/lynxie/internal/commands/img"
 	"github.com/Fluffy-Bean/lynxie/internal/commands/porb"
 	"github.com/Fluffy-Bean/lynxie/internal/commands/tinyfox"
-	"github.com/bwmarrin/discordgo"
 )
 
 func main() {
