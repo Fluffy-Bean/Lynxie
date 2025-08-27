@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"database/sql"
 	"fmt"
 	"os"
 	"os/signal"
@@ -8,6 +9,7 @@ import (
 	"syscall"
 
 	"github.com/bwmarrin/discordgo"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type CommandContext struct {
@@ -35,11 +37,17 @@ func NewHandler(prefix string, onHelp HelpCallback, onError ErrorCallback) *Hand
 type Handler struct {
 	prefix string
 
+	db *sql.DB
+
 	commands       map[string]Command
 	commandAliases map[string]string
 
 	onHelp  HelpCallback
 	onError ErrorCallback
+}
+
+func (h *Handler) GetDB() *sql.DB {
+	return h.db
 }
 
 func (h *Handler) RegisterCommand(command string, f Command) error {
@@ -147,7 +155,15 @@ func (h *Handler) handleCommand(session *discordgo.Session, message *discordgo.M
 	}
 }
 
-func (h *Handler) Run(token string, intent discordgo.Intent) error {
+func (h *Handler) Run(databasePath, token string, intent discordgo.Intent) error {
+	var err error
+
+	h.db, err = sql.Open("sqlite3", databasePath)
+	if err != nil {
+		return fmt.Errorf("opening database: %v", err)
+	}
+	defer h.db.Close()
+
 	dg, err := discordgo.New("Bot " + token)
 	if err != nil {
 		return fmt.Errorf("creating discord session: %s", err)
@@ -160,6 +176,7 @@ func (h *Handler) Run(token string, intent discordgo.Intent) error {
 	if err != nil {
 		return fmt.Errorf("opening discord session: %s", err)
 	}
+	defer dg.Close()
 
 	fmt.Println("Bot is now running. Press CTRL-C to exit.")
 
@@ -168,5 +185,5 @@ func (h *Handler) Run(token string, intent discordgo.Intent) error {
 
 	<-sc
 
-	return dg.Close()
+	return nil
 }
