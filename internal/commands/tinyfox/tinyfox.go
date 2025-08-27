@@ -4,12 +4,10 @@ import (
 	"fmt"
 	"net/http"
 	"slices"
-	"strings"
 	"time"
 
+	"github.com/Fluffy-Bean/lynxie/internal/bot"
 	"github.com/Fluffy-Bean/lynxie/internal/color"
-	"github.com/Fluffy-Bean/lynxie/internal/errors"
-	"github.com/Fluffy-Bean/lynxie/internal/handler"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -80,52 +78,41 @@ var animalAliases = map[string]string{
 	"opossum":      "poss",
 }
 
-func RegisterTinyfoxCommands(bot *handler.Bot) {
-	bot.RegisterCommand("animal", registerAnimal(bot))
-
-	bot.RegisterCommandAlias("a", "animal")
+func RegisterTinyfoxCommands(h *bot.Handler) {
+	_ = h.RegisterCommand("tinyfox", cmdTinyFox(h))
+	_ = h.RegisterCommandAlias("animal", "tinyfox")
+	_ = h.RegisterCommandAlias("a", "tinyfox")
 }
 
-func registerAnimal(bot *handler.Bot) handler.Callback {
-	return func(h *handler.Handler, args []string) errors.Error {
-		if len(args) < 1 {
-			return errors.Error{
-				Msg: "Animal name is required!",
-				Err: fmt.Errorf("animal name is required"),
-			}
+func cmdTinyFox(h *bot.Handler) bot.Command {
+	return func(h *bot.Handler, c bot.CommandContext) error {
+		if len(h.ParseArgs(c)) < 1 {
+			return fmt.Errorf("animal name not provided")
 		}
 
-		animal := args[0]
+		animal := h.ParseArgs(c)[0]
 
 		if !slices.Contains(animals, animal) {
 			alias, ok := animalAliases[animal]
 			if !ok {
-				return errors.Error{
-					Msg: fmt.Sprintf("Animal \"%s\" is invalid. The following animals are supported:\n%s", animal, strings.Join(animals, ", ")),
-					Err: fmt.Errorf("entered invalid animal name"),
-				}
+				return fmt.Errorf("unknown animal %s", animal)
 			}
+
 			animal = alias
 		}
 
 		req, err := http.NewRequest(http.MethodGet, "https://api.tinyfox.dev/img?animal="+animal, nil)
 		if err != nil {
-			return errors.Error{
-				Msg: "Failed to make request",
-				Err: err,
-			}
+			return fmt.Errorf("create request: %w", err)
 		}
 
 		res, err := client.Do(req)
 		if err != nil {
-			return errors.Error{
-				Msg: "Failed to do request",
-				Err: err,
-			}
+			return fmt.Errorf("do request: %w", err)
 		}
 		defer res.Body.Close()
 
-		_, err = h.Session.ChannelMessageSendComplex(h.Message.ChannelID, &discordgo.MessageSend{
+		_, err = c.Session.ChannelMessageSendComplex(c.Message.ChannelID, &discordgo.MessageSend{
 			Embed: &discordgo.MessageEmbed{
 				Title: "Animal",
 				Image: &discordgo.MessageEmbedImage{
@@ -140,15 +127,12 @@ func registerAnimal(bot *handler.Bot) handler.Callback {
 					Reader:      res.Body,
 				},
 			},
-			Reference: h.Reference,
+			Reference: c.Message.Reference(),
 		})
 		if err != nil {
-			return errors.Error{
-				Msg: "failed to send tinyfox message",
-				Err: err,
-			}
+			return fmt.Errorf("send tinyfox response: %w", err)
 		}
 
-		return errors.Error{}
+		return nil
 	}
 }
