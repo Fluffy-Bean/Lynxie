@@ -76,6 +76,14 @@ var animalAliases = map[string]string{
 	"coyote":       "yote",
 	"possum":       "poss",
 	"opossum":      "poss",
+	"leg":          "gaura",
+	"leggy":        "gaura",
+	"maned-wolf":   "gaura",
+	"maney":        "gaura",
+	"mane":         "gaura",
+	"lobo":         "gaura",
+	"painted":      "chi",
+	"wad":          "chi",
 }
 
 func RegisterTinyfoxCommands(h *bot.Handler) {
