@@ -4,20 +4,22 @@ when:
 
 steps:
   - name: build
-    image: golang:1.24-alpine3.20
-    commands:
-      - go mod tidy
-      - go build -ldflags="-X 'github.com/Fluffy-Bean/lynxie/_resources.BuildHash=$CI_COMMIT_SHA' -X 'github.com/Fluffy-Bean/lynxie/_resources.BuildPipelineLink=$CI_PIPELINE_URL'" -o lynxie .
+    image: golang:1.25-alpine3.20
+    commands: |
+      go mod tidy
+      go build -ldflags="-X 'github.com/Fluffy-Bean/lynxie/_resources.BuildHash=$CI_COMMIT_SHA' -X 'github.com/Fluffy-Bean/lynxie/_resources.BuildPipelineLink=$CI_PIPELINE_URL'" -o lynxie cmd/lynxie-bot/main.go
   - name: deploy
     image: alpine:latest
-    commands:
-      - apk add --no-cache openssh-client
-      - mkdir -p ~/.ssh
-      - echo "$SSH_KEY" > ~/.ssh/id_rsa
-      - chmod 600 ~/.ssh/id_rsa
-      - ssh -tt -o StrictHostKeyChecking=no uncertainty@192.168.178.31 "rm $COPY_TO || true"
-      - scp -o StrictHostKeyChecking=no $COPY_FROM uncertainty@192.168.178.31:$COPY_TO
-      - ssh -tt -o StrictHostKeyChecking=no uncertainty@192.168.178.31 "doas service lynxie restart"
+    commands: |
+      apk add --no-cache openssh-client
+      mkdir -p ~/.ssh
+      echo "$SSH_KEY" > ~/.ssh/id_rsa
+      chmod 600 ~/.ssh/id_rsa
+
+      ssh -tt -o StrictHostKeyChecking=no uncertainty@192.168.178.31 "rm $COPY_TO || true"
+      scp -o StrictHostKeyChecking=no $COPY_FROM uncertainty@192.168.178.31:$COPY_TO
+
+      ssh -tt -o StrictHostKeyChecking=no uncertainty@192.168.178.31 "doas service lynxie restart"
     environment:
       COPY_FROM: lynxie
       COPY_TO: /home/uncertainty/lynxie
