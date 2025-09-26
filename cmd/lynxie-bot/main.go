@@ -1,9 +1,11 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
+	"path"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
@@ -16,20 +18,51 @@ import (
 	"github.com/Fluffy-Bean/lynxie/internal/commands/tinyfox"
 )
 
+var flags struct {
+	Token    *string
+	Prefix   *string
+	DataPath *string
+}
+
 func main() {
-	h := bot.NewHandler(">", handleHelp, handleError)
+	err := parseFlags()
+	if err != nil {
+		log.Fatal("parse flags:", err)
+	}
+
+	h := bot.NewHandler(*flags.Prefix, handleHelp, handleError)
 
 	debug.RegisterDebugCommands(h)
 	img.RegisterImgCommands(h)
 	tinyfox.RegisterTinyfoxCommands(h)
 	porb.RegisterPorbCommands(h)
 
-	databasePath := "_data/storage_prod.db"
-	if os.Getenv("IS_DEV") != "" {
-		databasePath = "_data/storage_dev.db"
-	}
+	databasePath := path.Join(*flags.DataPath, "storage.db")
 
 	log.Fatal(h.Run(databasePath, os.Getenv("TOKEN"), discordgo.IntentsGuildMessages))
+}
+
+func parseFlags() error {
+	flags.Prefix = flag.String("prefix", ">", "The prefix the bot will search for within messages")
+
+	flags.DataPath = flag.String("datapath", "", "The path to the datapath, defaults to $HOME/.lynxie if empty")
+	if *flags.DataPath == "" {
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			return err
+		}
+
+		*flags.DataPath = path.Join(homeDir, ".lynxie", "data")
+	}
+
+	flags.Token = flag.String("token", "", "The bot token, defaults to checking for TOKEN in env")
+	if *flags.Token == "" {
+		*flags.Token = os.Getenv("TOKEN")
+	}
+
+	flag.Parse()
+
+	return nil
 }
 
 func handleHelp(h *bot.Handler, c bot.CommandContext) {
