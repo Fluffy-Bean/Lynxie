@@ -5,7 +5,7 @@ LYNXIE_CMD="/home/uncertainty/lynxie"
 APP_NAME="lynxie"
 
 command="$LYNXIE_CMD"
-command_args=""
+command_args="-prefix='>' -datapath='' -token=''"
 command_user="$LYNXIE_USER"
 pidfile="/var/run/${APP_NAME}.pid"
 output_log="/var/log/${APP_NAME}.log"
@@ -18,7 +18,8 @@ depend() {
 start() {
         ebegin "Starting ${APP_NAME}"
 
-        export TOKEN=""
+        # The bot also searches for the bot token in the env
+        # export TOKEN=""
 
         start-stop-daemon --start --user "$LYNXIE_USER" \
                           --make-pidfile --pidfile "$pidfile" \
