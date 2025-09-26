@@ -44,8 +44,11 @@ func main() {
 
 func parseFlags() error {
 	flags.Prefix = flag.String("prefix", ">", "The prefix the bot will search for within messages")
-
 	flags.DataPath = flag.String("datapath", "", "The path to the datapath, defaults to $HOME/.lynxie if empty")
+	flags.Token = flag.String("token", "", "The bot token, defaults to checking for TOKEN in env")
+
+	flag.Parse()
+
 	if *flags.DataPath == "" {
 		homeDir, err := os.UserHomeDir()
 		if err != nil {
@@ -55,12 +58,9 @@ func parseFlags() error {
 		*flags.DataPath = path.Join(homeDir, ".lynxie", "data")
 	}
 
-	flags.Token = flag.String("token", "", "The bot token, defaults to checking for TOKEN in env")
 	if *flags.Token == "" {
 		*flags.Token = os.Getenv("TOKEN")
 	}
-
-	flag.Parse()
 
 	return nil
 }
