@@ -13,6 +13,7 @@ import (
 	"github.com/Fluffy-Bean/lynxie/internal/bot"
 	"github.com/Fluffy-Bean/lynxie/internal/color"
 	"github.com/Fluffy-Bean/lynxie/internal/commands/debug"
+	"github.com/Fluffy-Bean/lynxie/internal/commands/fortnite"
 	"github.com/Fluffy-Bean/lynxie/internal/commands/img"
 	"github.com/Fluffy-Bean/lynxie/internal/commands/porb"
 	"github.com/Fluffy-Bean/lynxie/internal/commands/tinyfox"
@@ -36,6 +37,7 @@ func main() {
 	img.RegisterImgCommands(h)
 	tinyfox.RegisterTinyfoxCommands(h)
 	porb.RegisterPorbCommands(h)
+	fortnite.RegisterFortniteCommands(h)
 
 	databasePath := path.Join(*flags.DataPath, "storage.db")
 

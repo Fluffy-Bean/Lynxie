@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 	_ "github.com/mattn/go-sqlite3"
@@ -48,6 +49,26 @@ type Handler struct {
 
 func (h *Handler) GetDB() *sql.DB {
 	return h.db
+}
+
+func (h *Handler) ScheduleTask(do func(), every time.Duration) {
+	// Run the command initially
+	do()
+
+	// This sucks so bad man
+	go func() {
+		for range time.Tick(every) {
+			func() {
+				defer func() {
+					if r := recover(); r != nil {
+						fmt.Println("panic in scheduled task:", r)
+					}
+				}()
+
+				do()
+			}()
+		}
+	}()
 }
 
 func (h *Handler) RegisterCommand(command string, f Command) error {
