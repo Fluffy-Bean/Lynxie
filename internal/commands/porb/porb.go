@@ -1,6 +1,7 @@
 package porb
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -18,47 +19,50 @@ var client = http.Client{
 	Timeout: 10 * time.Second,
 }
 
-type post struct {
-	Id        int       `json:"id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	File      struct {
-		Width  int    `json:"width"`
-		Height int    `json:"height"`
-		Ext    string `json:"ext"`
-		Size   int    `json:"size"`
-		Md5    string `json:"md5"`
-		Url    string `json:"url"`
-	} `json:"file"`
-	Score struct {
-		Up    int `json:"up"`
-		Down  int `json:"down"`
-		Total int `json:"total"`
-	} `json:"score"`
-	Tags struct {
-		General     []string      `json:"general"`
-		Artist      []string      `json:"artist"`
-		Contributor []interface{} `json:"contributor"`
-		Copyright   []string      `json:"copyright"`
-		Character   []interface{} `json:"character"`
-		Species     []string      `json:"species"`
-		Invalid     []interface{} `json:"invalid"`
-		Meta        []string      `json:"meta"`
-		Lore        []interface{} `json:"lore"`
-	} `json:"tags"`
-	Rating       string   `json:"rating"`
-	FavCount     int      `json:"fav_count"`
-	Sources      []string `json:"sources"`
-	Description  string   `json:"description"`
-	CommentCount int      `json:"comment_count"`
-}
-
 func RegisterPorbCommands(h *bot.Handler) {
 	_ = h.RegisterCommand("porb", cmdPorb(h))
 	_ = h.RegisterCommandAlias("e621", "porb")
+
+	_ = h.RegisterCommand("yiff", cmdYiff(h))
+	_ = h.RegisterCommandAlias("yiff.gay", "yiff")
 }
 
 func cmdPorb(h *bot.Handler) bot.Command {
+	type post struct {
+		Id        int       `json:"id"`
+		CreatedAt time.Time `json:"created_at"`
+		UpdatedAt time.Time `json:"updated_at"`
+		File      struct {
+			Width  int    `json:"width"`
+			Height int    `json:"height"`
+			Ext    string `json:"ext"`
+			Size   int    `json:"size"`
+			Md5    string `json:"md5"`
+			Url    string `json:"url"`
+		} `json:"file"`
+		Score struct {
+			Up    int `json:"up"`
+			Down  int `json:"down"`
+			Total int `json:"total"`
+		} `json:"score"`
+		Tags struct {
+			General     []string      `json:"general"`
+			Artist      []string      `json:"artist"`
+			Contributor []interface{} `json:"contributor"`
+			Copyright   []string      `json:"copyright"`
+			Character   []interface{} `json:"character"`
+			Species     []string      `json:"species"`
+			Invalid     []interface{} `json:"invalid"`
+			Meta        []string      `json:"meta"`
+			Lore        []interface{} `json:"lore"`
+		} `json:"tags"`
+		Rating       string   `json:"rating"`
+		FavCount     int      `json:"fav_count"`
+		Sources      []string `json:"sources"`
+		Description  string   `json:"description"`
+		CommentCount int      `json:"comment_count"`
+	}
+
 	return func(h *bot.Handler, c bot.CommandContext) error {
 		var options struct {
 			Order  string
@@ -150,6 +154,55 @@ func cmdPorb(h *bot.Handler) bot.Command {
 		})
 		if err != nil {
 			return fmt.Errorf("send e621 response: %w", err)
+		}
+
+		return nil
+	}
+}
+
+func cmdYiff(h *bot.Handler) bot.Command {
+	var client = http.Client{
+		Timeout: 10 * time.Second,
+
+		// The sites certificates seems to be currently fucked...
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+		},
+	}
+
+	return func(h *bot.Handler, c bot.CommandContext) error {
+		req, err := http.NewRequest(http.MethodGet, "https://yiff.gay", nil)
+		if err != nil {
+			return fmt.Errorf("create request: %w", err)
+		}
+
+		res, err := client.Do(req)
+		if err != nil {
+			return fmt.Errorf("do request: %w", err)
+		}
+		defer res.Body.Close()
+
+		_, err = c.Session.ChannelMessageSendComplex(c.Message.ChannelID, &discordgo.MessageSend{
+			Embed: &discordgo.MessageEmbed{
+				Title: "yiff.gay",
+				Image: &discordgo.MessageEmbedImage{
+					URL: "attachment://yiff.png",
+				},
+				Color: color.RGBToDiscord(255, 255, 255),
+			},
+			Files: []*discordgo.File{
+				{
+					Name:        "yiff.png",
+					ContentType: "",
+					Reader:      res.Body,
+				},
+			},
+			Reference: c.Message.Reference(),
+		})
+		if err != nil {
+			return fmt.Errorf("send yiff response: %w", err)
 		}
 
 		return nil
