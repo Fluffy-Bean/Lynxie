@@ -101,13 +101,13 @@ func cmdTinyFox(h *bot.Handler) bot.Command {
 
 		animal := h.ParseArgs(c)[0]
 
-		if !slices.Contains(animals, animal) {
-			alias, ok := animalAliases[animal]
-			if !ok {
-				return fmt.Errorf("unknown animal %s", animal)
-			}
-
+		alias, ok := animalAliases[animal]
+		if ok {
 			animal = alias
+		}
+
+		if !slices.Contains(animals, animal) {
+			return fmt.Errorf("unknown animal %s", animal)
 		}
 
 		req, err := http.NewRequest(http.MethodGet, "https://api.tinyfox.dev/img?animal="+animal, nil)
@@ -120,6 +120,11 @@ func cmdTinyFox(h *bot.Handler) bot.Command {
 			return fmt.Errorf("do request: %w", err)
 		}
 		defer res.Body.Close()
+
+		// API responds with JSON rather than image data if there was an incorrect request done
+		if res.Header.Get("Content-Type") != "image/jpeg" {
+			return fmt.Errorf("content type: possibly unknown animal %s", animal)
+		}
 
 		_, err = c.Session.ChannelMessageSendComplex(c.Message.ChannelID, &discordgo.MessageSend{
 			Embed: &discordgo.MessageEmbed{
