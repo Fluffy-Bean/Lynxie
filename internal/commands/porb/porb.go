@@ -8,9 +8,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bwmarrin/discordgo"
+
 	"github.com/Fluffy-Bean/lynxie/internal/bot"
 	"github.com/Fluffy-Bean/lynxie/internal/color"
-	"github.com/bwmarrin/discordgo"
 )
 
 var client = http.Client{

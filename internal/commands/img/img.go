@@ -14,11 +14,11 @@ import (
 	"time"
 
 	"git.sr.ht/~sbinet/gg"
+	"github.com/bwmarrin/discordgo"
 
 	"github.com/Fluffy-Bean/lynxie/_resources"
 	"github.com/Fluffy-Bean/lynxie/internal/bot"
 	"github.com/Fluffy-Bean/lynxie/internal/color"
-	"github.com/bwmarrin/discordgo"
 )
 
 const maxFileSize = 1024 * 1024 * 10 // 10MB
