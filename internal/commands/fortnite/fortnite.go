@@ -81,6 +81,7 @@ func updateTrackList() {
 }
 
 func cmdFestivalTracks(h *handler.Handler) handler.Callback {
+	_ = h.RegisterCommandHelp("fn-festival", "Show fortnite festival track list")
 	_ = h.RegisterCommandAlias("fn-festival", "fnff")
 
 	return func(session *discordgo.Session, message *discordgo.MessageCreate) error {

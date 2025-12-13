@@ -221,23 +221,12 @@ func (h *Handler) handleHelp(session *discordgo.Session, message *discordgo.Mess
 	var commands []string
 
 	for command := range h.commands {
-		var aliases []string
-		for alias, aliasedCommand := range h.commandAliases {
-			if aliasedCommand == command {
-				aliases = append(aliases, alias)
-			}
-		}
-
 		help, ok := h.commandHelp[command]
 		if !ok {
 			help = "No help message provided"
 		}
 
-		if len(aliases) == 0 {
-			commands = append(commands, fmt.Sprintf("%s: %s", command, help))
-		} else {
-			commands = append(commands, fmt.Sprintf("%s (%s): %s", command, strings.Join(aliases, ", "), help))
-		}
+		commands = append(commands, fmt.Sprintf("`%s`: %s", command, help))
 	}
 
 	_, _ = session.ChannelMessageSendComplex(message.ChannelID, &discordgo.MessageSend{
@@ -246,7 +235,7 @@ func (h *Handler) handleHelp(session *discordgo.Session, message *discordgo.Mess
 			Description: strings.Join(commands, "\n"),
 			Color:       utils.RGBToDiscord(255, 255, 255),
 			Footer: &discordgo.MessageEmbedFooter{
-				Text: "command (aliases...): help message",
+				Text: "command: help message",
 			},
 		},
 		Reference: message.Reference(),

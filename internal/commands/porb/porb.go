@@ -161,6 +161,7 @@ func cmdPorb(h *handler.Handler) handler.Callback {
 }
 
 func cmdYiff(h *handler.Handler) handler.Callback {
+	_ = h.RegisterCommandHelp("yiff", "Get a random image from yiff.gay")
 	_ = h.RegisterCommandAlias("yiff", "yiff.gay")
 
 	client := http.Client{
