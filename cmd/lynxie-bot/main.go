@@ -55,7 +55,7 @@ func main() {
 	porb.RegisterCommands(h)
 	fortnite.RegisterCommands(h)
 
-	log.Fatal(h.Run(os.Getenv("TOKEN")))
+	log.Fatal(h.Run(*flags.Token))
 }
 
 func parseFlags() error {
