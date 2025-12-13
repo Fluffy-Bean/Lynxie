@@ -11,23 +11,23 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 
-	"github.com/Fluffy-Bean/lynxie/internal/bot"
-	"github.com/Fluffy-Bean/lynxie/internal/color"
+	"github.com/Fluffy-Bean/lynxie/internal/handler"
+	"github.com/Fluffy-Bean/lynxie/internal/utils"
 )
 
-var client = http.Client{
-	Timeout: 10 * time.Second,
-}
-
-func RegisterPorbCommands(h *bot.Handler) {
+func RegisterCommands(h *handler.Handler) {
 	_ = h.RegisterCommand("porb", cmdPorb(h))
-	_ = h.RegisterCommandAlias("e621", "porb")
-
 	_ = h.RegisterCommand("yiff", cmdYiff(h))
-	_ = h.RegisterCommandAlias("yiff.gay", "yiff")
 }
 
-func cmdPorb(h *bot.Handler) bot.Command {
+func cmdPorb(h *handler.Handler) handler.Callback {
+	_ = h.RegisterCommandHelp("porb", "Search e621")
+	_ = h.RegisterCommandAlias("porb", "e621")
+
+	client := http.Client{
+		Timeout: 10 * time.Second,
+	}
+
 	type post struct {
 		Id        int       `json:"id"`
 		CreatedAt time.Time `json:"created_at"`
@@ -63,7 +63,7 @@ func cmdPorb(h *bot.Handler) bot.Command {
 		CommentCount int      `json:"comment_count"`
 	}
 
-	return func(h *bot.Handler, c bot.CommandContext) error {
+	return func(session *discordgo.Session, message *discordgo.MessageCreate) error {
 		var options struct {
 			Order  string
 			Rating string
@@ -74,7 +74,7 @@ func cmdPorb(h *bot.Handler) bot.Command {
 		cmd.StringVar(&options.Order, "order", "random", "Search order")
 		cmd.StringVar(&options.Rating, "rating", "e", "Search rating")
 
-		err := cmd.Parse(h.ParseArgs(c))
+		err := cmd.Parse(h.ParseArgs(session, message))
 		if err != nil {
 			return fmt.Errorf("parse flags: %w", err)
 		}
@@ -119,7 +119,7 @@ func cmdPorb(h *bot.Handler) bot.Command {
 			description = "No description provided."
 		}
 
-		_, err = c.Session.ChannelMessageSendComplex(c.Message.ChannelID, &discordgo.MessageSend{
+		_, err = session.ChannelMessageSendComplex(message.ChannelID, &discordgo.MessageSend{
 			Embed: &discordgo.MessageEmbed{
 				Title:       "E621",
 				Description: description,
@@ -148,9 +148,9 @@ func cmdPorb(h *bot.Handler) bot.Command {
 				Footer: &discordgo.MessageEmbedFooter{
 					Text: fmt.Sprintf("ID: %d | Created: %s", data.Posts[0].Id, data.Posts[0].CreatedAt.Format(time.DateTime)),
 				},
-				Color: color.RGBToDiscord(255, 255, 255),
+				Color: utils.RGBToDiscord(255, 255, 255),
 			},
-			Reference: c.Message.Reference(),
+			Reference: message.Reference(),
 		})
 		if err != nil {
 			return fmt.Errorf("send e621 response: %w", err)
@@ -160,8 +160,10 @@ func cmdPorb(h *bot.Handler) bot.Command {
 	}
 }
 
-func cmdYiff(h *bot.Handler) bot.Command {
-	var client = http.Client{
+func cmdYiff(h *handler.Handler) handler.Callback {
+	_ = h.RegisterCommandAlias("yiff", "yiff.gay")
+
+	client := http.Client{
 		Timeout: 10 * time.Second,
 
 		// The sites certificates seems to be currently fucked...
@@ -172,7 +174,7 @@ func cmdYiff(h *bot.Handler) bot.Command {
 		},
 	}
 
-	return func(h *bot.Handler, c bot.CommandContext) error {
+	return func(session *discordgo.Session, message *discordgo.MessageCreate) error {
 		req, err := http.NewRequest(http.MethodGet, "https://yiff.gay", nil)
 		if err != nil {
 			return fmt.Errorf("create request: %w", err)
@@ -184,13 +186,13 @@ func cmdYiff(h *bot.Handler) bot.Command {
 		}
 		defer res.Body.Close()
 
-		_, err = c.Session.ChannelMessageSendComplex(c.Message.ChannelID, &discordgo.MessageSend{
+		_, err = session.ChannelMessageSendComplex(message.ChannelID, &discordgo.MessageSend{
 			Embed: &discordgo.MessageEmbed{
 				Title: "yiff.gay",
 				Image: &discordgo.MessageEmbedImage{
 					URL: "attachment://yiff.png",
 				},
-				Color: color.RGBToDiscord(255, 255, 255),
+				Color: utils.RGBToDiscord(255, 255, 255),
 			},
 			Files: []*discordgo.File{
 				{
@@ -199,7 +201,7 @@ func cmdYiff(h *bot.Handler) bot.Command {
 					Reader:      res.Body,
 				},
 			},
-			Reference: c.Message.Reference(),
+			Reference: message.Reference(),
 		})
 		if err != nil {
 			return fmt.Errorf("send yiff response: %w", err)

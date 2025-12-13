@@ -3,7 +3,6 @@ package img
 import (
 	"bufio"
 	"bytes"
-	_ "embed"
 	"fmt"
 	"image"
 	"image/jpeg"
@@ -17,8 +16,8 @@ import (
 	"github.com/bwmarrin/discordgo"
 
 	"github.com/Fluffy-Bean/lynxie/_resources"
-	"github.com/Fluffy-Bean/lynxie/internal/bot"
-	"github.com/Fluffy-Bean/lynxie/internal/color"
+	"github.com/Fluffy-Bean/lynxie/internal/handler"
+	"github.com/Fluffy-Bean/lynxie/internal/utils"
 )
 
 const maxFileSize = 1024 * 1024 * 10 // 10MB
@@ -27,18 +26,18 @@ var client = http.Client{
 	Timeout: 10 * time.Second,
 }
 
-func RegisterImgCommands(h *bot.Handler) {
+func RegisterCommands(h *handler.Handler) {
 	_ = h.RegisterCommand("togif", cmdToGif(h))
-	_ = h.RegisterCommandAlias("gif", "togif")
-	_ = h.RegisterCommandAlias("saveable", "togif")
-
 	_ = h.RegisterCommand("caption", cmdCaption(h))
-	_ = h.RegisterCommandAlias("c", "caption")
 }
 
-func cmdToGif(h *bot.Handler) bot.Command {
-	return func(h *bot.Handler, c bot.CommandContext) error {
-		fileEndpoint, err := findClosestImage(c)
+func cmdToGif(h *handler.Handler) handler.Callback {
+	_ = h.RegisterCommandHelp("togif", "Convert an image to a GIF to make it save-able within discord")
+	_ = h.RegisterCommandAlias("togif", "gif")
+	_ = h.RegisterCommandAlias("togif", "saveable")
+
+	return func(session *discordgo.Session, message *discordgo.MessageCreate) error {
+		fileEndpoint, err := findClosestImage(session, message)
 		if err != nil {
 			return fmt.Errorf("get image: %s", err)
 		}
@@ -58,14 +57,14 @@ func cmdToGif(h *bot.Handler) bot.Command {
 		}
 		defer res.Body.Close()
 
-		_, err = c.Session.ChannelMessageSendComplex(c.Message.ChannelID, &discordgo.MessageSend{
+		_, err = session.ChannelMessageSendComplex(message.ChannelID, &discordgo.MessageSend{
 			Embed: &discordgo.MessageEmbed{
 				Title:       "Saveable",
 				Description: "Image converted to GIF :3",
 				Image: &discordgo.MessageEmbedImage{
 					URL: "attachment://saveable.gif",
 				},
-				Color: color.RGBToDiscord(255, 255, 255),
+				Color: utils.RGBToDiscord(255, 255, 255),
 			},
 			Files: []*discordgo.File{
 				{
@@ -74,7 +73,7 @@ func cmdToGif(h *bot.Handler) bot.Command {
 					Reader:      res.Body,
 				},
 			},
-			Reference: c.Message.Reference(),
+			Reference: message.Reference(),
 		})
 		if err != nil {
 			return fmt.Errorf("send togif response: %s", err)
@@ -84,9 +83,12 @@ func cmdToGif(h *bot.Handler) bot.Command {
 	}
 }
 
-func cmdCaption(h *bot.Handler) bot.Command {
-	return func(h *bot.Handler, c bot.CommandContext) error {
-		fileEndpoint, err := findClosestImage(c)
+func cmdCaption(h *handler.Handler) handler.Callback {
+	_ = h.RegisterCommandHelp("caption", "Add a caption to a provided image")
+	_ = h.RegisterCommandAlias("caption", "c")
+
+	return func(session *discordgo.Session, message *discordgo.MessageCreate) error {
+		fileEndpoint, err := findClosestImage(session, message)
 		if err != nil {
 			return fmt.Errorf("get image: %s", err)
 		}
@@ -119,7 +121,7 @@ func cmdCaption(h *bot.Handler) bot.Command {
 		imgWidth, imgHeight := img.Bounds().Dx(), img.Bounds().Dy()
 
 		captionSize := max(min(float64(imgWidth/15), 16), 50)
-		captionText := strings.Join(h.ParseArgs(c), " ")
+		captionText := strings.Join(h.ParseArgs(session, message), " ")
 
 		// 8px padding all around
 		_, captionHeight := measureText(_resources.FontRoboto, captionText, captionSize, imgWidth-16)
@@ -155,13 +157,13 @@ func cmdCaption(h *bot.Handler) bot.Command {
 			return fmt.Errorf("encode image: %s", err)
 		}
 
-		_, err = c.Session.ChannelMessageSendComplex(c.Message.ChannelID, &discordgo.MessageSend{
+		_, err = session.ChannelMessageSendComplex(message.ChannelID, &discordgo.MessageSend{
 			Embed: &discordgo.MessageEmbed{
 				Title: "Caption",
 				Image: &discordgo.MessageEmbedImage{
 					URL: "attachment://caption.jpeg",
 				},
-				Color: color.RGBToDiscord(255, 255, 255),
+				Color: utils.RGBToDiscord(255, 255, 255),
 			},
 			Files: []*discordgo.File{
 				{
@@ -170,7 +172,7 @@ func cmdCaption(h *bot.Handler) bot.Command {
 					Reader:      bytes.NewReader(export.Bytes()),
 				},
 			},
-			Reference: c.Message.Reference(),
+			Reference: message.Reference(),
 		})
 		if err != nil {
 			return fmt.Errorf("send caption response: %s", err)
@@ -194,13 +196,13 @@ func loadImageFromBytes(buff []byte) (image.Image, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to decode png: %s", err)
 		}
-		break
+
 	case "image/jpeg":
 		img, err = jpeg.Decode(bytes.NewReader(buff))
 		if err != nil {
 			return nil, fmt.Errorf("failed to decode jpeg: %s", err)
 		}
-		break
+
 	default:
 		return nil, fmt.Errorf("unknown or unsupported format: %s", contentType)
 	}
@@ -208,46 +210,46 @@ func loadImageFromBytes(buff []byte) (image.Image, error) {
 	return img, nil
 }
 
-func findClosestImage(c bot.CommandContext) (string, error) {
-	if len(c.Message.Attachments) >= 1 {
-		if c.Message.Attachments[0].Size > maxFileSize {
+func findClosestImage(session *discordgo.Session, message *discordgo.MessageCreate) (string, error) {
+	if len(message.Attachments) >= 1 {
+		if message.Attachments[0].Size > maxFileSize {
 			return "", fmt.Errorf("file size is too big")
 		}
 
-		return c.Message.Attachments[0].ProxyURL, nil
+		return message.Attachments[0].ProxyURL, nil
 	}
 
-	if c.Message.ReferencedMessage != nil {
-		message := c.Message.ReferencedMessage
+	if message.ReferencedMessage != nil {
+		referenced := message.ReferencedMessage
 
-		if len(message.Attachments) >= 1 {
-			if message.Attachments[0].Size > maxFileSize {
+		if len(referenced.Attachments) >= 1 {
+			if referenced.Attachments[0].Size > maxFileSize {
 				return "", fmt.Errorf("file size is too big")
 			}
 
-			return message.Attachments[0].ProxyURL, nil
+			return referenced.Attachments[0].ProxyURL, nil
 		}
 
-		if len(message.Embeds) >= 1 && message.Embeds[0].Image != nil {
-			return message.Embeds[0].Image.ProxyURL, nil
+		if len(referenced.Embeds) >= 1 && referenced.Embeds[0].Image != nil {
+			return referenced.Embeds[0].Image.ProxyURL, nil
 		}
 	}
 
-	history, err := c.Session.ChannelMessages(c.Message.ChannelID, 10, c.Message.ID, "", "")
+	history, err := session.ChannelMessages(message.ChannelID, 10, message.ID, "", "")
 	if err != nil {
 		return "", err
 	}
-	for _, message := range history {
-		if len(message.Attachments) >= 1 {
-			if message.Attachments[0].Size > maxFileSize {
+	for _, entry := range history {
+		if len(entry.Attachments) >= 1 {
+			if entry.Attachments[0].Size > maxFileSize {
 				return "", fmt.Errorf("file size is too big")
 			}
 
-			return message.Attachments[0].ProxyURL, nil
+			return entry.Attachments[0].ProxyURL, nil
 		}
 
-		if len(message.Embeds) >= 1 && message.Embeds[0].Image != nil {
-			return message.Embeds[0].Image.ProxyURL, nil
+		if len(entry.Embeds) >= 1 && entry.Embeds[0].Image != nil {
+			return entry.Embeds[0].Image.ProxyURL, nil
 		}
 	}
 

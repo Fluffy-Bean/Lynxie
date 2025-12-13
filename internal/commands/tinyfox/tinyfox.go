@@ -8,8 +8,8 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 
-	"github.com/Fluffy-Bean/lynxie/internal/bot"
-	"github.com/Fluffy-Bean/lynxie/internal/color"
+	"github.com/Fluffy-Bean/lynxie/internal/handler"
+	"github.com/Fluffy-Bean/lynxie/internal/utils"
 )
 
 var client = http.Client{
@@ -87,19 +87,21 @@ var animalAliases = map[string]string{
 	"wad":          "chi",
 }
 
-func RegisterTinyfoxCommands(h *bot.Handler) {
+func RegisterCommands(h *handler.Handler) {
 	_ = h.RegisterCommand("tinyfox", cmdTinyFox(h))
-	_ = h.RegisterCommandAlias("animal", "tinyfox")
-	_ = h.RegisterCommandAlias("a", "tinyfox")
 }
 
-func cmdTinyFox(h *bot.Handler) bot.Command {
-	return func(h *bot.Handler, c bot.CommandContext) error {
-		if len(h.ParseArgs(c)) < 1 {
+func cmdTinyFox(h *handler.Handler) handler.Callback {
+	_ = h.RegisterCommandHelp("tinyfox", "Search for silly animal images")
+	_ = h.RegisterCommandAlias("tinyfox", "animal")
+	_ = h.RegisterCommandAlias("tinyfox", "a")
+
+	return func(session *discordgo.Session, message *discordgo.MessageCreate) error {
+		if len(h.ParseArgs(session, message)) < 1 {
 			return fmt.Errorf("animal name not provided")
 		}
 
-		animal := h.ParseArgs(c)[0]
+		animal := h.ParseArgs(session, message)[0]
 
 		alias, ok := animalAliases[animal]
 		if ok {
@@ -126,13 +128,13 @@ func cmdTinyFox(h *bot.Handler) bot.Command {
 			return fmt.Errorf("content type: possibly unknown animal %s", animal)
 		}
 
-		_, err = c.Session.ChannelMessageSendComplex(c.Message.ChannelID, &discordgo.MessageSend{
+		_, err = session.ChannelMessageSendComplex(message.ChannelID, &discordgo.MessageSend{
 			Embed: &discordgo.MessageEmbed{
 				Title: "Animal",
 				Image: &discordgo.MessageEmbedImage{
 					URL: "attachment://animal.png",
 				},
-				Color: color.RGBToDiscord(255, 255, 255),
+				Color: utils.RGBToDiscord(255, 255, 255),
 			},
 			Files: []*discordgo.File{
 				{
@@ -141,7 +143,7 @@ func cmdTinyFox(h *bot.Handler) bot.Command {
 					Reader:      res.Body,
 				},
 			},
-			Reference: c.Message.Reference(),
+			Reference: message.Reference(),
 		})
 		if err != nil {
 			return fmt.Errorf("send tinyfox response: %w", err)

@@ -9,23 +9,25 @@ import (
 	"github.com/bwmarrin/discordgo"
 
 	"github.com/Fluffy-Bean/lynxie/_resources"
-	"github.com/Fluffy-Bean/lynxie/internal/bot"
-	"github.com/Fluffy-Bean/lynxie/internal/color"
+	"github.com/Fluffy-Bean/lynxie/internal/handler"
+	"github.com/Fluffy-Bean/lynxie/internal/utils"
 )
 
-func RegisterDebugCommands(h *bot.Handler) {
+func RegisterCommands(h *handler.Handler) {
 	_ = h.RegisterCommand("debug", cmdDebug(h))
 	_ = h.RegisterCommand("panic", cmdPanic(h))
 }
 
-func cmdDebug(h *bot.Handler) bot.Command {
-	return func(h *bot.Handler, c bot.CommandContext) error {
+func cmdDebug(h *handler.Handler) handler.Callback {
+	_ = h.RegisterCommandHelp("debug", "Show debug stats of the bot")
+
+	return func(session *discordgo.Session, message *discordgo.MessageCreate) error {
 		buildTags := "-"
 		goVersion := strings.TrimPrefix(runtime.Version(), "go")
 		gcCount := runtime.MemStats{}.NumGC
 		buildHash := _resources.BuildHash
 		buildPipeline := _resources.BuildPipelineLink
-		latency := c.Session.HeartbeatLatency().Milliseconds()
+		latency := session.HeartbeatLatency().Milliseconds()
 
 		info, _ := debug.ReadBuildInfo()
 		for _, setting := range info.Settings {
@@ -35,7 +37,7 @@ func cmdDebug(h *bot.Handler) bot.Command {
 			}
 		}
 
-		_, err := c.Session.ChannelMessageSendComplex(c.Message.ChannelID, &discordgo.MessageSend{
+		_, err := session.ChannelMessageSendComplex(message.ChannelID, &discordgo.MessageSend{
 			Embed: &discordgo.MessageEmbed{
 				Title: "Lynxie",
 				Fields: []*discordgo.MessageEmbedField{
@@ -70,9 +72,9 @@ func cmdDebug(h *bot.Handler) bot.Command {
 						Inline: false,
 					},
 				},
-				Color: color.RGBToDiscord(255, 255, 255),
+				Color: utils.RGBToDiscord(255, 255, 255),
 			},
-			Reference: c.Message.Reference(),
+			Reference: message.Reference(),
 		})
 		if err != nil {
 			return fmt.Errorf("send debug response: %s", err)
@@ -82,8 +84,10 @@ func cmdDebug(h *bot.Handler) bot.Command {
 	}
 }
 
-func cmdPanic(h *bot.Handler) bot.Command {
-	return func(h *bot.Handler, c bot.CommandContext) error {
+func cmdPanic(h *handler.Handler) handler.Callback {
+	_ = h.RegisterCommandHelp("panic", "Make the bot panic!")
+
+	return func(session *discordgo.Session, message *discordgo.MessageCreate) error {
 		panic("we all panic!")
 	}
 }

@@ -9,8 +9,8 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 
-	"github.com/Fluffy-Bean/lynxie/internal/bot"
-	"github.com/Fluffy-Bean/lynxie/internal/color"
+	"github.com/Fluffy-Bean/lynxie/internal/handler"
+	"github.com/Fluffy-Bean/lynxie/internal/utils"
 )
 
 type festivalTrack struct {
@@ -41,9 +41,8 @@ var client = http.Client{
 var mutex = &sync.RWMutex{}
 var festivalTracks = make(map[string]festivalTrack)
 
-func RegisterFortniteCommands(h *bot.Handler) {
+func RegisterCommands(h *handler.Handler) {
 	_ = h.RegisterCommand("fn-festival", cmdFestivalTracks(h))
-	_ = h.RegisterCommandAlias("fnff", "fn-festival")
 
 	// The actual list only gets updated every 24 hours, but I have not yet figured out a way to do cron jobs on specific hours...
 	h.ScheduleTask(updateTrackList, time.Hour*1)
@@ -81,39 +80,41 @@ func updateTrackList() {
 	festivalTracks = updatedTrackList
 }
 
-func cmdFestivalTracks(h *bot.Handler) bot.Command {
-	return func(h *bot.Handler, c bot.CommandContext) error {
+func cmdFestivalTracks(h *handler.Handler) handler.Callback {
+	_ = h.RegisterCommandAlias("fn-festival", "fnff")
+
+	return func(session *discordgo.Session, message *discordgo.MessageCreate) error {
 		mutex.RLock()
 		defer mutex.RUnlock()
 
-		message := &discordgo.MessageSend{
+		msg := &discordgo.MessageSend{
 			Embed: &discordgo.MessageEmbed{
 				Title:  "Fortnite Festival",
 				Fields: []*discordgo.MessageEmbedField{},
 				Footer: &discordgo.MessageEmbedFooter{
 					Text: "25 randomly picked currently featured tracks",
 				},
-				Color: color.RGBToDiscord(255, 255, 255),
+				Color: utils.RGBToDiscord(255, 255, 255),
 			},
-			Reference: c.Message.Reference(),
+			Reference: message.Reference(),
 		}
 
 		for _, track := range festivalTracks {
 			if !track.Featured {
 				continue
 			}
-			if len(message.Embed.Fields) >= 25 {
+			if len(msg.Embed.Fields) >= 25 {
 				break
 			}
 
-			message.Embed.Fields = append(message.Embed.Fields, &discordgo.MessageEmbedField{
+			msg.Embed.Fields = append(msg.Embed.Fields, &discordgo.MessageEmbedField{
 				Name:   fmt.Sprintf("%s (%s)", track.Title, track.Artist),
 				Value:  fmt.Sprintf("%s | %d | %dbpm", track.Duration, track.ReleaseYear, track.Bpm),
 				Inline: false,
 			})
 		}
 
-		_, err := c.Session.ChannelMessageSendComplex(c.Message.ChannelID, message)
+		_, err := session.ChannelMessageSendComplex(message.ChannelID, msg)
 		if err != nil {
 			return fmt.Errorf("send festival response: %w", err)
 		}
