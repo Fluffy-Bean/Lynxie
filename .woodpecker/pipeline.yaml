@@ -6,6 +6,7 @@ steps:
   - name: build
     image: golang:1.25.1-alpine3.22
     commands: |
+      apk add build-base
       go mod tidy
       CGO_ENABLED=1 go build -ldflags="-X 'github.com/Fluffy-Bean/lynxie/_resources.BuildHash=$CI_COMMIT_SHA' -X 'github.com/Fluffy-Bean/lynxie/_resources.BuildPipelineLink=$CI_PIPELINE_URL'" -o lynxie cmd/lynxie-bot/main.go
   - name: deploy
