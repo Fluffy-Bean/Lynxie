@@ -28,7 +28,7 @@ func cmdPorb(h *handler.Handler) handler.Callback {
 		Timeout: 10 * time.Second,
 	}
 
-	type post struct {
+	type apiPost struct {
 		Id        int       `json:"id"`
 		CreatedAt time.Time `json:"created_at"`
 		UpdatedAt time.Time `json:"updated_at"`
@@ -40,6 +40,12 @@ func cmdPorb(h *handler.Handler) handler.Callback {
 			Md5    string `json:"md5"`
 			Url    string `json:"url"`
 		} `json:"file"`
+		Preview struct {
+			Width  int    `json:"width"`
+			Height int    `json:"height"`
+			Url    string `json:"url"`
+			Alt    string `json:"alt"`
+		} `json:"preview"`
 		Score struct {
 			Up    int `json:"up"`
 			Down  int `json:"down"`
@@ -85,7 +91,6 @@ func cmdPorb(h *handler.Handler) handler.Callback {
 			options.Rating,
 			strings.Join(cmd.Args(), "+"),
 		)
-
 		req, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
 			return fmt.Errorf("create request: %w", err)
@@ -101,7 +106,7 @@ func cmdPorb(h *handler.Handler) handler.Callback {
 		defer res.Body.Close()
 
 		var data struct {
-			Posts []post `json:"posts"`
+			Posts []apiPost `json:"posts"`
 		}
 		err = json.NewDecoder(res.Body).Decode(&data)
 		if err != nil {
@@ -112,46 +117,82 @@ func cmdPorb(h *handler.Handler) handler.Callback {
 			return fmt.Errorf("no posts found")
 		}
 
-		var description string
-		if len(data.Posts[0].Description) > 0 {
-			description = data.Posts[0].Description
-		} else {
-			description = "No description provided."
-		}
+		post := data.Posts[0]
 
-		_, err = session.ChannelMessageSendComplex(message.ChannelID, &discordgo.MessageSend{
+		msg := discordgo.MessageSend{
 			Embed: &discordgo.MessageEmbed{
 				Title:       "E621",
-				Description: description,
-				Fields: []*discordgo.MessageEmbedField{
-					{
-						Name:  "Score",
-						Value: fmt.Sprintf("⬆️ %d | ⬇️ %d", data.Posts[0].Score.Up, data.Posts[0].Score.Down),
-					},
-					{
-						Name:  "Favorites",
-						Value: fmt.Sprintf("%d", data.Posts[0].FavCount),
-					},
-					{
-						Name:  "Comments",
-						Value: fmt.Sprintf("%d", data.Posts[0].CommentCount),
-					},
-					{
-						Name:   "Source(s)",
-						Value:  strings.Join(data.Posts[0].Sources, ", "),
-						Inline: false,
-					},
-				},
-				Image: &discordgo.MessageEmbedImage{
-					URL: data.Posts[0].File.Url,
-				},
-				Footer: &discordgo.MessageEmbedFooter{
-					Text: fmt.Sprintf("ID: %d | Created: %s", data.Posts[0].Id, data.Posts[0].CreatedAt.Format(time.DateTime)),
-				},
-				Color: utils.RGBToDiscord(255, 255, 255),
+				Description: "No description available",
+				Fields:      []*discordgo.MessageEmbedField{},
+				Color:       utils.RGBToDiscord(255, 255, 255),
 			},
 			Reference: message.Reference(),
+		}
+
+		if post.Description != "" {
+			msg.Embed.Description = post.Description
+		}
+
+		msg.Embed.Fields = append(msg.Embed.Fields, &discordgo.MessageEmbedField{
+			Name:  "Score",
+			Value: fmt.Sprintf("⬆️ %d | ⬇️ %d", post.Score.Up, post.Score.Down),
 		})
+
+		msg.Embed.Fields = append(msg.Embed.Fields, &discordgo.MessageEmbedField{
+			Name:  "Favorites",
+			Value: fmt.Sprintf("%d", post.FavCount),
+		})
+
+		msg.Embed.Fields = append(msg.Embed.Fields, &discordgo.MessageEmbedField{
+			Name:  "Comments",
+			Value: fmt.Sprintf("%d", post.CommentCount),
+		})
+
+		switch len(post.Sources) {
+		case 0:
+			// noop
+
+		case 1:
+			msg.Embed.Fields = append(msg.Embed.Fields, &discordgo.MessageEmbedField{
+				Name:   "Source",
+				Value:  post.Sources[0],
+				Inline: false,
+			})
+
+		default:
+			msg.Embed.Fields = append(msg.Embed.Fields, &discordgo.MessageEmbedField{
+				Name:   "Sources",
+				Value:  strings.Join(post.Sources, ", "),
+				Inline: false,
+			})
+		}
+
+		if post.CreatedAt.IsZero() {
+			msg.Embed.Footer = &discordgo.MessageEmbedFooter{
+				Text: fmt.Sprintf("ID: %d", post.Id),
+			}
+		} else {
+			msg.Embed.Footer = &discordgo.MessageEmbedFooter{
+				Text: fmt.Sprintf("ID: %d | Created: %s", post.Id, post.CreatedAt.Format(time.DateTime)),
+			}
+		}
+
+		switch post.File.Ext {
+		case "jpg", "jpeg", "png", "gif":
+			msg.Embed.Image = &discordgo.MessageEmbedImage{
+				URL: post.File.Url,
+			}
+
+		case "mp4", "webm": // Unfortunately, discord doesn't currently allow bots to embed videos in responses :c
+			msg.Embed.Image = &discordgo.MessageEmbedImage{
+				URL: post.Preview.Url,
+			}
+
+		default:
+			return fmt.Errorf("unknown response ext %s", post.File.Ext)
+		}
+
+		_, err = session.ChannelMessageSendComplex(message.ChannelID, &msg)
 		if err != nil {
 			return fmt.Errorf("send e621 response: %w", err)
 		}
